@@ -1,0 +1,45 @@
+# Global ignore patterns for whole project
+# =========================================
+
+# App settings that contain secrets / local config
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# IDE caches
+.vs/
+.vscode/
+.idea/
+
+# .NET build output (fallback if backend/.gitignore isn't applied)
+bin/
+obj/
+
+# Frontend
+front/restaurant-ui/node_modules/
+front/restaurant-ui/dist/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+*.env
+*.env.*
+
+# Docker
+docker-compose.override.yml
+deploy/postgres-data/
+pgdata/
+db-data/
+
+# Logs
+*.log
+logs/
+deploy/.env
+.vs/RestaurantSys/v17/DocumentLayout.json
+.vs/ProjectEvaluation/restaurantsys.metadata.v9.bin
+.vs/ProjectEvaluation/restaurantsys.projects.v9.bin
+.vs/ProjectEvaluation/restaurantsys.strings.v9.bin
+.vs/RestaurantSys/v17/.suo
+.vs/RestaurantSys/v17/DocumentLayout.backup.json
+.vs/RestaurantSys/v17/DocumentLayout.json
