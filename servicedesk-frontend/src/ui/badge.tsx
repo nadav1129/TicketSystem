@@ -11,9 +11,9 @@ type BadgeVariant =
   | "info";
 
 const variantClass: Record<BadgeVariant, string> = {
-  default: "bg-zinc-200 text-zinc-900",
-  secondary: "bg-zinc-900 text-zinc-300",
-  outline: "border border-zinc-700 bg-zinc-950 text-zinc-300",
+  default: "bg-zinc-100 text-zinc-900",
+  secondary: "bg-zinc-800 text-zinc-200",
+  outline: "border border-zinc-600 bg-zinc-900 text-zinc-200",
   success: "bg-emerald-500/20 text-emerald-300",
   warning: "bg-amber-500/20 text-amber-300",
   danger: "bg-rose-500/20 text-rose-300",

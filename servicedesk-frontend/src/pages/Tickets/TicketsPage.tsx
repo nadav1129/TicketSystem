@@ -6,6 +6,14 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Select } from "../../ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../ui/table";
 
 type ApiTicket = {
   id: number;
@@ -201,24 +209,25 @@ export default function TicketsPage() {
   const pillClass = (active: boolean) =>
     `rounded-lg border px-2.5 py-1.5 text-xs transition ${
       active
-        ? "border-sky-200 bg-sky-50 text-sky-700"
-        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+        ? "border-emerald-600/70 bg-emerald-600/20 text-emerald-300"
+        : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100"
     }`;
 
-  const badgeClass = (value: string, type: "priority" | "status") => {
+  const badgeVariant = (
+    value: string,
+    type: "priority" | "status",
+  ): "danger" | "warning" | "secondary" | "success" | "info" => {
     if (type === "priority") {
-      if (value === "Critical") return "bg-rose-100 text-rose-700";
-      if (value === "High") return "bg-orange-100 text-orange-700";
-      if (value === "Medium") return "bg-amber-100 text-amber-700";
-      return "bg-slate-100 text-slate-700";
+      if (value === "Critical") return "danger";
+      if (value === "High") return "warning";
+      if (value === "Medium") return "warning";
+      return "secondary";
     }
 
-    if (value === "Resolved" || value === "Closed")
-      return "bg-emerald-100 text-emerald-700";
-    if (value === "Escalated") return "bg-rose-100 text-rose-700";
-    if (value === "In Progress") return "bg-blue-100 text-blue-700";
-    if (value === "Waiting for Parts") return "bg-violet-100 text-violet-700";
-    return "bg-slate-100 text-slate-700";
+    if (value === "Resolved" || value === "Closed") return "success";
+    if (value === "Escalated") return "danger";
+    if (value === "In Progress") return "info";
+    return "secondary";
   };
 
   return (
@@ -235,6 +244,7 @@ export default function TicketsPage() {
           />
           <Button
             onClick={() => setIsTicketPanelOpen(true)}
+            className="border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-900/40 ring-1 ring-emerald-500/40 transition-all hover:border-emerald-400 hover:bg-emerald-500 hover:shadow-emerald-500/35"
           >
             New Ticket
           </Button>
@@ -243,7 +253,7 @@ export default function TicketsPage() {
     >
       <section className="p-6">
         <div className="space-y-4">
-          <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-sm">
+          <div className="rounded-md border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
             <div className="flex flex-col gap-3 border-b border-slate-200 pb-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="text-lg font-semibold text-slate-900">
@@ -363,7 +373,7 @@ export default function TicketsPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 rounded-3xl border border-slate-300 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 rounded-md border border-zinc-800 bg-zinc-900 p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="text-sm text-slate-500">Showing results</div>
               <div className="mt-1 text-2xl font-semibold">
@@ -413,34 +423,34 @@ export default function TicketsPage() {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-md border border-zinc-800 bg-black shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-5 py-4 font-medium">Ticket num</th>
-                    <th className="px-5 py-4 font-medium">Requester</th>
-                    <th className="px-5 py-4 font-medium">Product name</th>
-                    <th className="px-5 py-4 font-medium">Channel</th>
-                    <th className="px-5 py-4 font-medium">Priority</th>
-                    <th className="px-5 py-4 font-medium">Status</th>
-                    <th className="px-5 py-4 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="min-w-[980px] text-left text-sm">
+                <TableHeader className="bg-zinc-900/90">
+                  <TableRow className="hover:bg-zinc-900/90">
+                    <TableHead>Ticket num</TableHead>
+                    <TableHead>Requester</TableHead>
+                    <TableHead>Product name</TableHead>
+                    <TableHead>Channel</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {!isLoading && filteredTickets.length === 0 && (
-                    <tr>
-                      <td
+                    <TableRow>
+                      <TableCell
                         colSpan={7}
-                        className="px-5 py-10 text-center text-slate-500"
+                        className="py-10 text-center text-zinc-500"
                       >
                         No tickets found.
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
 
                   {filteredTickets.map((ticket) => (
-                    <tr
+                    <TableRow
                       key={ticket.rawId}
                       onClick={() => openTicket(ticket.rawId)}
                       onKeyDown={(e) => {
@@ -450,37 +460,33 @@ export default function TicketsPage() {
                         }
                       }}
                       tabIndex={0}
-                      className="cursor-pointer border-t transition hover:bg-slate-50/80 focus:bg-slate-50/80 focus:outline-none"
+                      className="cursor-pointer transition hover:bg-zinc-900/30 focus:bg-zinc-900/30 focus:outline-none"
                     >
-                      <td className="px-5 py-4 font-semibold text-slate-900">
+                      <TableCell className="font-semibold text-zinc-100">
                         {ticket.id}
-                      </td>
-                      <td className="px-5 py-4">{ticket.requester}</td>
-                      <td className="px-5 py-4 text-slate-600">
+                      </TableCell>
+                      <TableCell>{ticket.requester}</TableCell>
+                      <TableCell className="text-zinc-400">
                         {ticket.product}
-                      </td>
-                      <td className="px-5 py-4">{ticket.channel}</td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.priority, "priority")}`}
-                        >
+                      </TableCell>
+                      <TableCell>{ticket.channel}</TableCell>
+                      <TableCell>
+                        <Badge variant={badgeVariant(ticket.priority, "priority")}>
                           {ticket.priority}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.status, "status")}`}
-                        >
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={badgeVariant(ticket.status, "status")}>
                           {ticket.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-slate-500">
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-zinc-500">
                         {ticket.date}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>

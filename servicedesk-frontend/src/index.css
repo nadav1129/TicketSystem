@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050505;
+  --background: #090b10;
   --foreground: #f4f4f5;
-  --card: #09090b;
-  --muted: #a1a1aa;
-  --border: #27272a;
+  --card: #12151d;
+  --muted: #b2b8c5;
+  --border: #353a48;
   --ring: #10b981;
 }
 
@@ -23,10 +23,50 @@ body {
   margin: 0;
   color: var(--foreground);
   background:
-    radial-gradient(circle at 10% 0%, #0f172a 0%, transparent 36%),
-    radial-gradient(circle at 100% 0%, #0f3b2f 0%, transparent 28%),
+    radial-gradient(circle at 10% 0%, #1a2742 0%, transparent 36%),
+    radial-gradient(circle at 100% 0%, #145640 0%, transparent 28%),
     var(--background);
   font-family: "Plus Jakarta Sans", "Manrope", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Dark unification for legacy light utility classes still used in pages. */
+.bg-white {
+  background-color: #161922 !important;
+}
+
+.bg-slate-50 {
+  background-color: #1d2230 !important;
+}
+
+.bg-slate-100 {
+  background-color: #262d3c !important;
+}
+
+.border-slate-200,
+.border-slate-300 {
+  border-color: #3a4254 !important;
+}
+
+.text-slate-900 {
+  color: #f4f4f5 !important;
+}
+
+.text-slate-700 {
+  color: #e4e4e7 !important;
+}
+
+.text-slate-600 {
+  color: #d2d7e2 !important;
+}
+
+.text-slate-500,
+.text-slate-400 {
+  color: #a7aec0 !important;
+}
+
+.hover\:bg-slate-50:hover,
+.focus\:bg-slate-50:focus {
+  background-color: #242b39 !important;
 }

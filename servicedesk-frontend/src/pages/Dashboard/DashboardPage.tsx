@@ -6,6 +6,14 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../ui/table";
 
 const stats = [
   { label: "Open Tickets", value: "128", hint: "+12 today" },
@@ -79,7 +87,12 @@ export default function DashboardPage() {
             placeholder="Search tickets, users, tags..."
             className="w-72 bg-slate-50"
           />
-          <Button onClick={() => setIsTicketPanelOpen(true)}>New Ticket</Button>
+          <Button
+            onClick={() => setIsTicketPanelOpen(true)}
+            className="shrink-0 whitespace-nowrap border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-900/40 ring-1 ring-emerald-500/40 transition-all hover:border-emerald-400 hover:bg-emerald-500 hover:shadow-emerald-500/35"
+          >
+            New Ticket
+          </Button>
         </div>
       }
     >
@@ -112,21 +125,21 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="overflow-hidden rounded-2xl border border-slate-200">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-slate-500">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Ticket</th>
-                      <th className="px-4 py-3 font-medium">Requester</th>
-                      <th className="px-4 py-3 font-medium">Subject</th>
-                      <th className="px-4 py-3 font-medium">Channel</th>
-                      <th className="px-4 py-3 font-medium">Priority</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="overflow-hidden rounded-md border border-zinc-800">
+                <Table className="text-left text-sm">
+                  <TableHeader className="bg-zinc-900/90">
+                    <TableRow className="hover:bg-zinc-900/90">
+                      <TableHead>Ticket</TableHead>
+                      <TableHead>Requester</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Channel</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {tickets.map((ticket) => (
-                      <tr
+                      <TableRow
                         key={ticket.id}
                         onClick={() => openTicket(ticket.id)}
                         onKeyDown={(e) => {
@@ -136,13 +149,13 @@ export default function DashboardPage() {
                           }
                         }}
                         tabIndex={0}
-                        className="cursor-pointer border-t transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                        className="cursor-pointer transition hover:bg-zinc-900/30 focus:bg-zinc-900/30 focus:outline-none"
                       >
-                        <td className="px-4 py-3 font-medium">{ticket.id}</td>
-                        <td className="px-4 py-3">{ticket.requester}</td>
-                        <td className="px-4 py-3 text-slate-600">{ticket.subject}</td>
-                        <td className="px-4 py-3">{ticket.channel}</td>
-                        <td className="px-4 py-3">
+                        <TableCell className="font-medium">{ticket.id}</TableCell>
+                        <TableCell>{ticket.requester}</TableCell>
+                        <TableCell className="text-zinc-400">{ticket.subject}</TableCell>
+                        <TableCell>{ticket.channel}</TableCell>
+                        <TableCell>
                           <Badge
                             variant={
                               ticket.priority === "High"
@@ -154,8 +167,8 @@ export default function DashboardPage() {
                           >
                             {ticket.priority}
                           </Badge>
-                        </td>
-                        <td className="px-4 py-3">
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant={
                               ticket.status === "Resolved"
@@ -167,11 +180,11 @@ export default function DashboardPage() {
                           >
                             {ticket.status}
                           </Badge>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>

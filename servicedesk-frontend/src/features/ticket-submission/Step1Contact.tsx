@@ -10,8 +10,8 @@ export default function Step1Contact({ form, onChange }: Step1ContactProps) {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-xl font-semibold text-slate-900">Contact details</h3>
-        <p className="mt-1 text-sm text-slate-500">Start by entering the requester information.</p>
+        <h3 className="text-lg font-semibold text-zinc-100">Contact details</h3>
+        <p className="mt-1 text-xs text-zinc-500">Start by entering the requester information.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

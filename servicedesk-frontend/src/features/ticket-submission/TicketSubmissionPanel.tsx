@@ -245,11 +245,11 @@ export default function TicketSubmissionPanel({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onClick={handleClose}
     >
       <div
-        className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-2xl"
+        className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[20px] border border-zinc-800 bg-zinc-950 text-sm shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <TicketSubmissionHeader onClose={handleClose} />
@@ -278,7 +278,7 @@ export default function TicketSubmissionPanel({
           {step === 4 && <Step4ReviewSend form={form} products={products} />}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-200 px-6 py-5">
+        <div className="flex items-center justify-between border-t border-zinc-800 px-6 py-4">
           <Button
             type="button"
             onClick={previousStep}

@@ -14,8 +14,8 @@ export default function Step4ReviewSend({
   return (
     <div className="mx-auto w-full max-w-3xl space-y-5">
       <div>
-        <h3 className="text-2xl font-semibold text-slate-900">Review your ticket</h3>
-        <p className="mt-1 text-sm text-slate-500">
+        <h3 className="text-lg font-semibold text-zinc-100">Review your ticket</h3>
+        <p className="mt-1 text-xs text-zinc-500">
           Please review your information before sending the request.
         </p>
       </div>

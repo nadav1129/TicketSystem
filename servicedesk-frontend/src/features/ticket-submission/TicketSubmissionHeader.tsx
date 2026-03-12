@@ -7,11 +7,11 @@ type TicketSubmissionHeaderProps = {
 
 export default function TicketSubmissionHeader({ onClose }: TicketSubmissionHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+    <div className="flex items-start justify-between gap-4 border-b border-zinc-800 px-6 py-4">
       <div>
-        <div className="text-sm font-medium text-slate-500">New support request</div>
-        <h2 className="mt-1 text-2xl font-semibold text-slate-900">Submit a Ticket</h2>
-        <p className="mt-2 text-sm text-slate-500">
+        <div className="text-xs font-medium text-zinc-500">New support request</div>
+        <h2 className="mt-1 text-lg font-semibold text-zinc-100">Submit a Ticket</h2>
+        <p className="mt-2 text-xs text-zinc-500">
           Complete the four-step flow to report a faulty product.
         </p>
       </div>
@@ -21,7 +21,7 @@ export default function TicketSubmissionHeader({ onClose }: TicketSubmissionHead
         onClick={onClose}
         variant="outline"
         size="icon"
-        className="text-slate-500 hover:text-slate-700"
+        className="h-8 w-8 text-zinc-500 hover:text-zinc-200"
       >
         <X className="h-5 w-5" />
       </Button>

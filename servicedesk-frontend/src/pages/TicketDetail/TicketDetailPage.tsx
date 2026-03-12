@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
+import { Badge } from "../../ui/badge";
 
 type ViewerType = "agent" | "customer";
 type TicketStatusCode =
@@ -74,19 +75,23 @@ function formatDateTime(value: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-function statusClass(statusCode: TicketStatusCode) {
-  if (statusCode === "open") return "bg-blue-100 text-blue-700";
-  if (statusCode === "in_progress") return "bg-indigo-100 text-indigo-700";
-  if (statusCode === "waiting_customer") return "bg-violet-100 text-violet-700";
-  if (statusCode === "resolved") return "bg-emerald-100 text-emerald-700";
-  return "bg-slate-200 text-slate-700";
+function statusClass(
+  statusCode: TicketStatusCode,
+): "warning" | "info" | "secondary" | "success" {
+  if (statusCode === "open") return "warning";
+  if (statusCode === "in_progress") return "info";
+  if (statusCode === "waiting_customer") return "secondary";
+  if (statusCode === "resolved") return "success";
+  return "secondary";
 }
 
-function priorityClass(priorityCode: TicketPriorityCode) {
-  if (priorityCode === "low") return "bg-emerald-100 text-emerald-700";
-  if (priorityCode === "medium") return "bg-amber-100 text-amber-700";
-  if (priorityCode === "high") return "bg-orange-100 text-orange-700";
-  return "bg-rose-100 text-rose-700";
+function priorityClass(
+  priorityCode: TicketPriorityCode,
+): "success" | "warning" | "danger" {
+  if (priorityCode === "low") return "success";
+  if (priorityCode === "medium") return "warning";
+  if (priorityCode === "high") return "warning";
+  return "danger";
 }
 
 export default function TicketDetailsPage() {
@@ -116,6 +121,7 @@ export default function TicketDetailsPage() {
     (viewerType === "agent" || viewerType === "customer");
 
   const isAgent = viewerType === "agent";
+  const showPriority = isAgent;
   const numericTicketId = Number(ticketId);
 
   const [ticket, setTicket] = useState<TicketDetailsDto | null>(null);
@@ -375,7 +381,7 @@ export default function TicketDetailsPage() {
             onClick={() => navigate(backPath)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            ← Back
+            Back
           </button>
         }
       >
@@ -395,7 +401,7 @@ export default function TicketDetailsPage() {
             onClick={() => navigate(backPath)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            ← Back
+            Back
           </button>
         }
       >
@@ -417,7 +423,7 @@ export default function TicketDetailsPage() {
             onClick={() => navigate(backPath)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            ← Back
+            Back
           </button>
 
           {isAgent && canReply ? (
@@ -430,7 +436,7 @@ export default function TicketDetailsPage() {
                     handlePriorityChange(e.target.value as TicketPriorityCode)
                   }
                   disabled={isSaving}
-                  className={`rounded-full border-0 px-2 py-0.5 text-xs font-semibold outline-none ${priorityClass(selectedPriority)}`}
+                  className="rounded-full border-0 bg-zinc-900 px-2 py-0.5 text-xs font-semibold text-zinc-100 outline-none"
                 >
                   {priorityOptions.map((item) => (
                     <option key={item.code} value={item.code}>
@@ -452,7 +458,7 @@ export default function TicketDetailsPage() {
                     ticket.statusCode === "resolved" ||
                     ticket.statusCode === "closed"
                   }
-                  className={`rounded-full border-0 px-2 py-0.5 text-xs font-semibold outline-none ${statusClass(selectedStatus)}`}
+                  className="rounded-full border-0 bg-zinc-900 px-2 py-0.5 text-xs font-semibold text-zinc-100 outline-none"
                 >
                   {agentStatusOptions.map((item) => (
                     <option key={item.code} value={item.code}>
@@ -464,25 +470,23 @@ export default function TicketDetailsPage() {
             </>
           ) : null}
 
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${statusClass(ticket.statusCode)}`}
-          >
+          <Badge variant={statusClass(ticket.statusCode)}>
             {ticket.statusName}
-          </span>
+          </Badge>
 
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${priorityClass(ticket.priorityCode)}`}
-          >
-            {ticket.priorityName}
-          </span>
+          {showPriority ? (
+            <Badge variant={priorityClass(ticket.priorityCode)}>
+              {ticket.priorityName}
+            </Badge>
+          ) : null}
 
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          <Badge variant="secondary">
             #{ticket.ticketNumber}
-          </span>
+          </Badge>
 
-          <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+          <Badge variant="info">
             Viewer: {viewerType} {viewerName ? `• ${viewerName}` : ""}
-          </span>
+          </Badge>
         </div>
       }
     >
@@ -515,7 +519,9 @@ export default function TicketDetailsPage() {
                     value={`#${ticket.ticketNumber}`}
                   />
                   <ReceiptRow label="Status" value={ticket.statusName} />
-                  <ReceiptRow label="Priority" value={ticket.priorityName} />
+                  {showPriority ? (
+                    <ReceiptRow label="Priority" value={ticket.priorityName} />
+                  ) : null}
                   <ReceiptRow
                     label="Date created"
                     value={formatDateTime(ticket.createdAt)}

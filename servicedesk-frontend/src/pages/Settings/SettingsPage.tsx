@@ -113,7 +113,7 @@ function ToggleRow({
 }: ToggleRowProps) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 rounded-2xl border p-4 ${rowClassName}`}
+      className={`flex items-start justify-between gap-4 rounded-md border p-4 ${rowClassName}`}
     >
       <div className={textClassName}>
         <div className="font-medium">{title}</div>
@@ -138,7 +138,7 @@ function ToggleRow({
 }
 
 export default function SettingsPage() {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeId>("default");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeId>("dark");
   const [compactSidebar, setCompactSidebar] = useState(false);
   const [desktopNotifications, setDesktopNotifications] = useState(true);
   const [soundAlerts, setSoundAlerts] = useState(false);
@@ -154,7 +154,7 @@ export default function SettingsPage() {
       subtitle="Workspace personalization and support preferences."
       action={
         <div
-          className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium ${activeTheme.chip}`}
+          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${activeTheme.chip}`}
         >
           <Check className="h-4 w-4" />
           Active theme: {activeTheme.name}
@@ -162,11 +162,11 @@ export default function SettingsPage() {
       }
     >
       <div
-        className={`space-y-6 rounded-[28px] p-1 transition-colors duration-300 ${
+        className={`space-y-6 rounded-md p-1 transition-colors duration-300 ${
           activeTheme.id === "khaki-camo" ? "bg-[#b8b17c]" : activeTheme.shell
         }`}
       >
-        <section className={`rounded-[28px] border p-6 ${activeTheme.card}`}>
+        <section className={`rounded-md border p-6 ${activeTheme.card}`}>
           <div>
             <div className="text-sm font-medium opacity-70">
               Workspace preferences
@@ -180,7 +180,7 @@ export default function SettingsPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-          <div className={`rounded-[28px] border p-6 ${activeTheme.card}`}>
+          <div className={`rounded-md border p-6 ${activeTheme.card}`}>
             <div className="mb-5">
               <h2 className="text-xl font-semibold">Appearance</h2>
               <p className="mt-1 text-sm opacity-70">
@@ -199,7 +199,7 @@ export default function SettingsPage() {
                     key={theme.id}
                     type="button"
                     onClick={() => setSelectedTheme(theme.id)}
-                    className={`appearance-none overflow-hidden rounded-[24px] p-4 text-left outline-none transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                    className={`appearance-none overflow-hidden rounded-md p-4 text-left outline-none transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                       theme.id === "dark"
                         ? isActive
                           ? "border-2 border-white bg-slate-950 text-slate-100"
@@ -261,7 +261,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className={`rounded-[28px] border p-6 ${activeTheme.card}`}>
+          <div className={`rounded-md border p-6 ${activeTheme.card}`}>
             <h2 className="text-xl font-semibold">Quick preferences</h2>
             <p className="mt-1 text-sm opacity-70">
               Extra toggles to make the page feel complete while keeping scope
@@ -302,7 +302,7 @@ export default function SettingsPage() {
             </div>
 
             <div
-              className={`mt-6 rounded-2xl border border-dashed p-4 text-sm opacity-80 ${activeTheme.infoBox}`}
+              className={`mt-6 rounded-md border border-dashed p-4 text-sm opacity-80 ${activeTheme.infoBox}`}
             >
               Current enabled themes:{" "}
               <span className="font-semibold">Default, Dark, Khaki Camo</span>

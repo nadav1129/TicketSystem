@@ -30,8 +30,8 @@ export default function Step2ProductSelect({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-xl font-semibold text-slate-900">Select product</h3>
-        <p className="mt-1 text-sm text-slate-500">
+        <h3 className="text-lg font-semibold text-zinc-100">Select product</h3>
+        <p className="mt-1 text-xs text-zinc-500">
           Choose a category and then the product involved in the issue.
         </p>
       </div>

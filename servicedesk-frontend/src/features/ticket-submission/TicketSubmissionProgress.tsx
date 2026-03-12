@@ -16,7 +16,7 @@ export default function TicketSubmissionProgress({
   currentStep,
 }: TicketSubmissionProgressProps) {
   return (
-    <div className="border-b border-slate-200 px-6 py-5">
+    <div className="border-b border-zinc-800 px-6 py-4">
       <div className="flex items-center">
         {steps.map((step, index) => {
           const done = currentStep > step.id;
@@ -28,20 +28,20 @@ export default function TicketSubmissionProgress({
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
                     done
-                      ? 'bg-sky-500 text-white'
+                      ? 'bg-emerald-600 text-zinc-950'
                       : active
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-slate-200 text-slate-600'
+                      ? 'bg-emerald-600 text-zinc-950'
+                      : 'bg-zinc-900 text-zinc-400'
                   }`}
                 >
                   {done ? <Check className="h-4 w-4" /> : step.id}
                 </div>
 
                 <div
-                  className={`truncate text-sm font-medium ${
-                    active || done ? 'text-slate-900' : 'text-slate-500'
+                  className={`truncate text-xs font-medium ${
+                    active || done ? 'text-zinc-100' : 'text-zinc-500'
                   }`}
                 >
                   {step.label}
@@ -49,7 +49,7 @@ export default function TicketSubmissionProgress({
               </div>
 
               {index < steps.length - 1 && (
-                <div className="mx-4 h-px flex-1 bg-slate-300" />
+                <div className="mx-4 h-px flex-1 bg-zinc-800" />
               )}
             </div>
           );

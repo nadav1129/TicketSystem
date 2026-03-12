@@ -6,12 +6,12 @@ type ButtonSize = "default" | "sm" | "lg" | "icon";
 
 const variantClass: Record<ButtonVariant, string> = {
   default:
-    "border border-zinc-700 bg-zinc-900 text-zinc-100 shadow-sm hover:bg-zinc-800",
+    "border border-zinc-600 bg-zinc-800 text-zinc-100 shadow-sm hover:bg-zinc-700",
   outline:
-    "border border-zinc-700 bg-zinc-950 text-zinc-200 shadow-xs hover:bg-zinc-900",
+    "border border-zinc-600 bg-zinc-900 text-zinc-100 shadow-xs hover:bg-zinc-800",
   secondary:
-    "border border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800",
-  ghost: "border border-transparent bg-transparent text-zinc-300 hover:bg-zinc-900",
+    "border border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700",
+  ghost: "border border-transparent bg-transparent text-zinc-200 hover:bg-zinc-800",
   danger:
     "border border-rose-700 bg-rose-700 text-white shadow-sm hover:bg-rose-600",
 };
