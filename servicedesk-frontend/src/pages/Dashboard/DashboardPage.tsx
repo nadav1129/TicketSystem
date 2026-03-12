@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { Badge } from "../../ui/badge";
+import { Button } from "../../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Input } from "../../ui/input";
 
 const stats = [
   { label: "Open Tickets", value: "128", hint: "+12 today" },
@@ -54,164 +58,157 @@ export default function DashboardPage() {
   const [voiceState, setVoiceState] = useState<VoiceState>("connecting");
 
   const openTicket = (ticketId: string) => {
-  navigate(`/agent/tickets/${ticketId.replace("#", "")}`, {
-    state: {
-      allowReply: false,
-      source: "dashboard",
-      viewerType: "agent",
-      viewerUserId: 0,
-      viewerName: "Viewer mode",
+    navigate(`/agent/tickets/${ticketId.replace("#", "")}`, {
+      state: {
+        allowReply: false,
+        source: "dashboard",
+        viewerType: "agent",
+        viewerUserId: 0,
+        viewerName: "Viewer mode",
       },
     });
-  } ;
+  };
 
   return (
     <AppLayot
       title="Support Dashboard"
-      subtitle="Clean admin page using shadcn-style layout with Ant Design and MUI widgets."
+      subtitle="Real-time operations view for support teams."
       action={
         <div className="flex items-center gap-3">
-          <input
+          <Input
             placeholder="Search tickets, users, tags..."
-            className="w-72 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none ring-0 transition focus:border-slate-400"
+            className="w-72 bg-slate-50"
           />
-          <button
-            onClick={() => setIsTicketPanelOpen(true)}
-            className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
-          >
-            New Ticket
-          </button>
+          <Button onClick={() => setIsTicketPanelOpen(true)}>New Ticket</Button>
         </div>
       }
     >
       <section className="space-y-6 p-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-3xl border border-slate-300 bg-white p-5 shadow-none"
-            >
-              <div className="text-sm text-slate-500">{stat.label}</div>
-              <div className="mt-2 text-3xl font-semibold tracking-tight">
-                {stat.value}
-              </div>
-              <div className="mt-2 text-xs text-slate-400">{stat.hint}</div>
-            </div>
+            <Card key={stat.label} className="rounded-3xl border-slate-200">
+              <CardContent className="p-5 pt-5">
+                <div className="text-sm text-slate-500">{stat.label}</div>
+                <div className="mt-2 text-3xl font-semibold tracking-tight">
+                  {stat.value}
+                </div>
+                <div className="mt-2 text-xs text-slate-400">{stat.hint}</div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <div className="rounded-3xl border border-slate-300 bg-white p-5 shadow-none xl:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Incoming Requests</h2>
-                <p className="text-sm text-slate-500">
-                  Today’s active queue overview
-                </p>
+          <Card className="rounded-3xl border-slate-200 xl:col-span-2">
+            <CardHeader className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Incoming Requests</CardTitle>
+                  <CardDescription className="mt-1">
+                    Today's active queue overview
+                  </CardDescription>
+                </div>
+                <Badge variant="success">Live</Badge>
               </div>
-              <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                Live
-              </div>
-            </div>
-
-            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-300">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Ticket</th>
-                    <th className="px-4 py-3 font-medium">Requester</th>
-                    <th className="px-4 py-3 font-medium">Subject</th>
-                    <th className="px-4 py-3 font-medium">Channel</th>
-                    <th className="px-4 py-3 font-medium">Priority</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      onClick={() => openTicket(ticket.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          openTicket(ticket.id);
-                        }
-                      }}
-                      tabIndex={0}
-                      className="cursor-pointer border-t transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
-                    >
-                      <td className="px-4 py-3 font-medium">{ticket.id}</td>
-                      <td className="px-4 py-3">{ticket.requester}</td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {ticket.subject}
-                      </td>
-                      <td className="px-4 py-3">{ticket.channel}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                            ticket.priority === "High"
-                              ? "bg-rose-50 text-rose-700"
-                              : ticket.priority === "Medium"
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {ticket.priority}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                            ticket.status === "Resolved"
-                              ? "bg-emerald-50 text-emerald-700"
-                              : ticket.status === "In Progress"
-                                ? "bg-blue-50 text-blue-700"
-                                : ticket.status === "Waiting"
-                                  ? "bg-violet-50 text-violet-700"
-                                  : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {ticket.status}
-                        </span>
-                      </td>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Ticket</th>
+                      <th className="px-4 py-3 font-medium">Requester</th>
+                      <th className="px-4 py-3 font-medium">Subject</th>
+                      <th className="px-4 py-3 font-medium">Channel</th>
+                      <th className="px-4 py-3 font-medium">Priority</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                  <tbody>
+                    {tickets.map((ticket) => (
+                      <tr
+                        key={ticket.id}
+                        onClick={() => openTicket(ticket.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openTicket(ticket.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        className="cursor-pointer border-t transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                      >
+                        <td className="px-4 py-3 font-medium">{ticket.id}</td>
+                        <td className="px-4 py-3">{ticket.requester}</td>
+                        <td className="px-4 py-3 text-slate-600">{ticket.subject}</td>
+                        <td className="px-4 py-3">{ticket.channel}</td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={
+                              ticket.priority === "High"
+                                ? "danger"
+                                : ticket.priority === "Medium"
+                                  ? "warning"
+                                  : "secondary"
+                            }
+                          >
+                            {ticket.priority}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={
+                              ticket.status === "Resolved"
+                                ? "success"
+                                : ticket.status === "In Progress"
+                                  ? "info"
+                                  : "secondary"
+                            }
+                          >
+                            {ticket.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-300 bg-white p-5 shadow-none">
-              <h2 className="text-lg font-semibold">Accessibility Intake</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                This block is meant for the voice-assisted ticket submission
-                feature.
-              </p>
-
-              <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
-                <div className="text-sm font-medium">Voice flow</div>
-                <div className="mt-2 text-sm text-slate-500">
-                  Press to talk, transcribe, classify urgency, and open a new
-                  service request.
+            <Card className="rounded-3xl border-slate-200">
+              <CardHeader className="p-5">
+                <CardTitle className="text-lg">Accessibility Intake</CardTitle>
+                <CardDescription className="mt-1">
+                  This block is meant for the voice-assisted ticket submission feature.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                  <div className="text-sm font-medium">Voice flow</div>
+                  <div className="mt-2 text-sm text-slate-500">
+                    Press to talk, transcribe, classify urgency, and open a new service request.
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setIsVoiceVisualizerOpen(true);
+                      setVoiceState("listening");
+                    }}
+                    className="mt-4 w-full"
+                  >
+                    Start Voice Intake
+                  </Button>
                 </div>
-                <button
-                  onClick={() => {
-                    setIsVoiceVisualizerOpen(true);
-                    setVoiceState("listening");
-                  }}
-                  className="mt-4 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
-                >
-                  Start Voice Intake
-                </button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-3xl border border-slate-300 bg-white p-5 shadow-none">
-              <h2 className="text-lg font-semibold">Team Performance</h2>
-              <p className="mt-1 text-sm text-slate-500">Quick KPI snapshot</p>
-
-              <div className="mt-4 space-y-4">
+            <Card className="rounded-3xl border-slate-200">
+              <CardHeader className="p-5">
+                <CardTitle className="text-lg">Team Performance</CardTitle>
+                <CardDescription className="mt-1">Quick KPI snapshot</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-0">
                 <div>
                   <div className="mb-2 flex items-center justify-between text-sm">
                     <span>First response SLA</span>
@@ -241,8 +238,8 @@ export default function DashboardPage() {
                     <div className="h-2 w-[96%] rounded-full bg-slate-900" />
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -262,8 +259,7 @@ export default function DashboardPage() {
                 Audio Frequency Visualizer
               </div>
               <div className="mt-1 text-sm text-slate-400">
-                Real-time frequency band visualization with animated state
-                transitions
+                Real-time frequency band visualization with animated state transitions
               </div>
 
               <div className="mt-5 rounded-3xl bg-zinc-900 p-4">
@@ -273,44 +269,52 @@ export default function DashboardPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 px-5 py-4">
               <div className="flex flex-wrap gap-2">
-                <button
+                <Button
                   onClick={() => setVoiceState("connecting")}
-                  className={`rounded-xl px-3 py-1.5 text-sm ${
+                  variant="secondary"
+                  size="sm"
+                  className={
                     voiceState === "connecting"
                       ? "bg-zinc-700 text-white"
                       : "bg-zinc-800 text-zinc-300"
-                  }`}
+                  }
                 >
                   Connecting
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setVoiceState("listening")}
-                  className={`rounded-xl px-3 py-1.5 text-sm ${
+                  variant="secondary"
+                  size="sm"
+                  className={
                     voiceState === "listening"
                       ? "bg-zinc-700 text-white"
                       : "bg-zinc-800 text-zinc-300"
-                  }`}
+                  }
                 >
                   Listening
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setVoiceState("speaking")}
-                  className={`rounded-xl px-3 py-1.5 text-sm ${
+                  variant="secondary"
+                  size="sm"
+                  className={
                     voiceState === "speaking"
                       ? "bg-white text-zinc-900"
                       : "bg-zinc-800 text-zinc-300"
-                  }`}
+                  }
                 >
                   Speaking
-                </button>
+                </Button>
               </div>
 
-              <button
+              <Button
                 onClick={() => setIsVoiceVisualizerOpen(false)}
-                className="rounded-xl border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300"
+                variant="outline"
+                size="sm"
+                className="border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>

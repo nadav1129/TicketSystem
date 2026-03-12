@@ -5,6 +5,7 @@ import Step1Contact from './Step1Contact';
 import Step2ProductSelect from './Step2ProductSelect';
 import Step3IssueDetails from './Step3IssueDetails';
 import Step4ReviewSend from './Step4ReviewSend';
+import { Button } from '../../ui/button';
 import type {
   Product,
   ProductCategory,
@@ -278,41 +279,39 @@ export default function TicketSubmissionPanel({
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 px-6 py-5">
-          <button
+          <Button
             type="button"
             onClick={previousStep}
             disabled={step === 1}
-            className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            variant="outline"
           >
             Back
-          </button>
+          </Button>
 
           <div className="flex items-center gap-3">
-            <button
+            <Button
               type="button"
               onClick={handleClose}
-              className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              variant="outline"
             >
               Cancel
-            </button>
+            </Button>
 
             {step < 4 ? (
-              <button
+              <Button
                 type="button"
                 onClick={nextStep}
                 disabled={!canContinue}
-                className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 Continue
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={submit}
-                className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
               >
                 Send ticket
-              </button>
+              </Button>
             )}
           </div>
         </div>

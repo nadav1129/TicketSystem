@@ -1,5 +1,7 @@
 import { issueTypeOptions } from './ticketSubmission.data';
 import type { TicketSubmissionForm } from './ticketSubmission.types';
+import { Select } from '../../ui/select';
+import { Textarea } from '../../ui/textarea';
 
 type Step3IssueDetailsProps = {
   form: TicketSubmissionForm;
@@ -23,10 +25,9 @@ export default function Step3IssueDetails({ form, onChange }: Step3IssueDetailsP
 
       <label className="block">
         <div className="mb-2 text-sm font-medium text-slate-700">Subject</div>
-        <select
+        <Select
           value={form.issueTypeId}
           onChange={(e) => handleSubjectChange(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
         >
           <option value="">Select a subject</option>
           {issueTypeOptions.map((item) => (
@@ -34,17 +35,17 @@ export default function Step3IssueDetails({ form, onChange }: Step3IssueDetailsP
               {item.label}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
 
       <label className="block">
         <div className="mb-2 text-sm font-medium text-slate-700">Message</div>
-        <textarea
+        <Textarea
           value={form.message}
           onChange={(e) => onChange('message', e.target.value)}
           placeholder="Describe what happened, when it started, and what resolution you expect..."
           rows={8}
-          className="w-full rounded-[24px] border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
+          className="rounded-[24px]"
         />
       </label>
     </div>

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { Button } from '../../ui/button';
 
 type TicketSubmissionHeaderProps = {
   onClose?: () => void;
@@ -15,13 +16,15 @@ export default function TicketSubmissionHeader({ onClose }: TicketSubmissionHead
         </p>
       </div>
 
-      <button
+      <Button
         type="button"
         onClick={onClose}
-        className="rounded-2xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+        variant="outline"
+        size="icon"
+        className="text-slate-500 hover:text-slate-700"
       >
         <X className="h-5 w-5" />
-      </button>
+      </Button>
     </div>
   );
 }

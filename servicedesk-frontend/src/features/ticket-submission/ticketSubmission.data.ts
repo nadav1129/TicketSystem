@@ -1,5 +1,3 @@
-import type { Product, ProductCategory, TicketSubject } from './ticketSubmission.types';
-
 export const issueTypeOptions = [
   { id: '1', label: 'Damaged Item' },
   { id: '2', label: 'Wrong Item' },

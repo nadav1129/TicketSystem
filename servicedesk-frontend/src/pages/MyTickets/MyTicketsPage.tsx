@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayot from '../../components/AppLayot';
+import { Badge } from '../../ui/badge';
+import { Input } from '../../ui/input';
+import { Select } from '../../ui/select';
 
 type PageMode = 'customer' | 'agent';
 
@@ -232,10 +235,10 @@ export default function MyTicketsPage() {
             </button>
           </div>
 
-          <select
+          <Select
             value={selectedUserId ?? ''}
             onChange={(e) => setSelectedUserId(Number(e.target.value))}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+            className="h-10 min-w-48"
             disabled={isUsersLoading || users.length === 0}
           >
             {users.length === 0 ? (
@@ -247,13 +250,13 @@ export default function MyTicketsPage() {
                 </option>
               ))
             )}
-          </select>
+          </Select>
 
-          <input
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search ticket or product..."
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-slate-400 md:w-72"
+            className="w-full bg-slate-50 md:w-72"
           />
         </div>
       }
@@ -277,9 +280,9 @@ export default function MyTicketsPage() {
                   <h2 className="text-xl font-semibold tracking-tight">
                     {isTicketsLoading ? 'Loading...' : profile.name || 'No profile selected'}
                   </h2>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                  <Badge variant="secondary">
                     {profile.roleLabel || (pageMode === 'customer' ? 'Customer' : 'Agent')}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">{profile.subtitle}</p>
 
@@ -341,9 +344,9 @@ export default function MyTicketsPage() {
                 Customer view shows the customer’s tickets. Agent view shows assigned tickets.
               </p>
             </div>
-            <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <Badge variant="secondary">
               {isTicketsLoading ? 'Loading...' : `${filteredTickets.length} rows`}
-            </div>
+            </Badge>
           </div>
 
           <div className="divide-y">
@@ -399,16 +402,12 @@ export default function MyTicketsPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(ticket.status)}`}
-                    >
+                    <Badge className={statusClass(ticket.status)}>
                       {ticket.status}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityClass(ticket.priority)}`}
-                    >
+                    </Badge>
+                    <Badge className={priorityClass(ticket.priority)}>
                       {ticket.priority}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
               </div>

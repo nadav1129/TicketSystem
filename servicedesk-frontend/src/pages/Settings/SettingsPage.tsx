@@ -193,9 +193,6 @@ export default function SettingsPage() {
               {themes.map((theme) => {
                 const Icon = theme.icon;
                 const isActive = selectedTheme === theme.id;
-                const optionCardClass = isActive
-                  ? theme.optionCardActive
-                  : theme.optionCard;
 
                 return (
                   <button

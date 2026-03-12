@@ -21,8 +21,6 @@ export default function TicketSubmissionProgress({
         {steps.map((step, index) => {
           const done = currentStep > step.id;
           const active = currentStep === step.id;
-          const upcoming = currentStep < step.id;
-
           return (
             <div
               key={step.id}

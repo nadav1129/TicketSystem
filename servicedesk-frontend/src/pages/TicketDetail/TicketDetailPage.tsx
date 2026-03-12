@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import AppLayot from "../../components/AppLayot";
 
 type ViewerType = "agent" | "customer";
 type TicketStatusCode =
@@ -800,28 +801,9 @@ type AppLayoutProps = {
 
 function AppLayout({ title, subtitle, action, children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 text-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-white/70 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
-          <div className="border-b border-slate-200 px-6 py-6 sm:px-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="text-3xl font-semibold tracking-tight text-slate-900">
-                  {title}
-                </div>
-                {subtitle ? (
-                  <div className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-                    {subtitle}
-                  </div>
-                ) : null}
-              </div>
-              {action ? <div className="shrink-0">{action}</div> : null}
-            </div>
-          </div>
-          {children}
-        </div>
-      </div>
-    </div>
+    <AppLayot title={title} subtitle={subtitle} action={action}>
+      {children}
+    </AppLayot>
   );
 }
 

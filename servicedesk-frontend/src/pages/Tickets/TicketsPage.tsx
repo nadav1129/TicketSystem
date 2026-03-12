@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { Badge } from "../../ui/badge";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Select } from "../../ui/select";
 
 type ApiTicket = {
   id: number;
@@ -223,18 +227,17 @@ export default function TicketsPage() {
       subtitle="Browse all faulty-product service requests and narrow them down with quick filters."
       action={
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <input
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search ticket, requester, product..."
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-slate-400 md:w-80"
+            className="w-full bg-slate-50 md:w-80"
           />
-          <button
+          <Button
             onClick={() => setIsTicketPanelOpen(true)}
-            className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
           >
             New Ticket
-          </button>
+          </Button>
         </div>
       }
     >
@@ -250,12 +253,13 @@ export default function TicketsPage() {
                   Narrow your ticket list quickly.
                 </div>
               </div>
-              <button
+              <Button
                 onClick={() => setIsFiltersOpen((v) => !v)}
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs text-slate-600 transition hover:bg-slate-50"
+                variant="outline"
+                size="sm"
               >
                 {isFiltersOpen ? "Collapse" : "Expand"}
-              </button>
+              </Button>
             </div>
 
             {isFiltersOpen && (
@@ -318,39 +322,41 @@ export default function TicketsPage() {
                     <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                       Sorting
                     </div>
-                    <select
+                    <Select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+                      className="h-9 bg-slate-50 text-sm"
                     >
                       <option>Newest first</option>
                       <option>Oldest first</option>
                       <option>Priority</option>
                       <option>Ticket number</option>
-                    </select>
+                    </Select>
                   </div>
 
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <button
+                    <Button
                       onClick={() => {
                         setPriorities([]);
                         setStatuses([]);
                         setChannels([]);
                       }}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      variant="outline"
+                      size="sm"
                     >
                       Clear all
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => {
                         setPriorities(["Critical", "High"]);
                         setStatuses(["New", "Open", "In Progress", "Escalated"]);
                         setChannels([]);
                       }}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100"
+                      variant="secondary"
+                      size="sm"
                     >
                       Triage preset
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -369,34 +375,34 @@ export default function TicketsPage() {
               {activeFilterCount > 0 ? (
                 <>
                   {priorities.map((item) => (
-                    <span
+                    <Badge
                       key={item}
-                      className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                      variant="default"
                     >
                       Priority: {item}
-                    </span>
+                    </Badge>
                   ))}
                   {statuses.map((item) => (
-                    <span
+                    <Badge
                       key={item}
-                      className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
+                      variant="secondary"
                     >
                       Status: {item}
-                    </span>
+                    </Badge>
                   ))}
                   {channels.map((item) => (
-                    <span
+                    <Badge
                       key={item}
-                      className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700"
+                      variant="info"
                     >
                       Channel: {item}
-                    </span>
+                    </Badge>
                   ))}
                 </>
               ) : (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                <Badge variant="secondary">
                   No filters selected
-                </span>
+                </Badge>
               )}
             </div>
           </div>
