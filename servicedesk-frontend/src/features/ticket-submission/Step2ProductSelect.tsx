@@ -1,56 +1,95 @@
 import ProductCard from './ProductCard';
-import { categories, products } from './ticketSubmission.data';
-import type { ProductCategory } from './ticketSubmission.types';
+import type { Product, ProductCategory } from './ticketSubmission.types';
 
 type Step2ProductSelectProps = {
+  categories: ProductCategory[];
+  products: Product[];
   selectedCategory: ProductCategory;
   selectedProductId: string;
+  loading?: boolean;
+  error?: string;
   onSelectCategory: (category: ProductCategory) => void;
   onSelectProduct: (productId: string) => void;
 };
 
 export default function Step2ProductSelect({
+  categories,
+  products,
   selectedCategory,
   selectedProductId,
+  loading = false,
+  error,
   onSelectCategory,
   onSelectProduct,
 }: Step2ProductSelectProps) {
-  const filteredProducts = products.filter((product) => product.category === selectedCategory);
+  const filteredProducts = products.filter(
+    (product) => product.category === selectedCategory
+  );
 
   return (
     <div className="space-y-5">
       <div>
         <h3 className="text-xl font-semibold text-slate-900">Select product</h3>
-        <p className="mt-1 text-sm text-slate-500">Choose a category and then the product involved in the issue.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Choose a category and then the product involved in the issue.
+        </p>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => onSelectCategory(category)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              selectedCategory === category
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+      {loading && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Loading products...
+        </div>
+      )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {filteredProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            selected={selectedProductId === product.id}
-            onSelect={onSelectProduct}
-          />
-        ))}
-      </div>
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {!loading && categories.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => onSelectCategory(category)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                selectedCategory === category
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && filteredProducts.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              selected={selectedProductId === product.id}
+              onSelect={onSelectProduct}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && categories.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          No categories were found.
+        </div>
+      )}
+
+      {!loading && !error && categories.length > 0 && filteredProducts.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          No products found in this category.
+        </div>
+      )}
     </div>
   );
 }

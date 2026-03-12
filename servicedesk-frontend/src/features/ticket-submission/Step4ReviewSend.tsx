@@ -1,11 +1,14 @@
-import { products } from './ticketSubmission.data';
-import type { TicketSubmissionForm } from './ticketSubmission.types';
+import type { Product, TicketSubmissionForm } from './ticketSubmission.types';
 
 type Step4ReviewSendProps = {
   form: TicketSubmissionForm;
+  products: Product[];
 };
 
-export default function Step4ReviewSend({ form }: Step4ReviewSendProps) {
+export default function Step4ReviewSend({
+  form,
+  products,
+}: Step4ReviewSendProps) {
   const product = products.find((item) => item.id === form.productId);
 
   return (
@@ -19,7 +22,9 @@ export default function Step4ReviewSend({ form }: Step4ReviewSendProps) {
 
       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-6 py-5">
-          <div className="text-lg font-semibold text-slate-900">Support request summary</div>
+          <div className="text-lg font-semibold text-slate-900">
+            Support request summary
+          </div>
           <div className="mt-1 text-sm text-slate-500">
             The support team will receive the following ticket details.
           </div>
@@ -28,7 +33,9 @@ export default function Step4ReviewSend({ form }: Step4ReviewSendProps) {
         <div className="border-b border-slate-200 px-6 py-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <div className="text-base font-semibold text-slate-900">Contact info</div>
+              <div className="text-base font-semibold text-slate-900">
+                Contact info
+              </div>
               <div className="mt-1 text-sm text-slate-500">
                 Basic requester information
               </div>
@@ -43,7 +50,9 @@ export default function Step4ReviewSend({ form }: Step4ReviewSendProps) {
 
         <div className="border-b border-slate-200 px-6 py-5">
           <div className="mb-4">
-            <div className="text-base font-semibold text-slate-900">Product info</div>
+            <div className="text-base font-semibold text-slate-900">
+              Product info
+            </div>
             <div className="mt-1 text-sm text-slate-500">
               Selected product for this ticket
             </div>
@@ -51,14 +60,32 @@ export default function Step4ReviewSend({ form }: Step4ReviewSendProps) {
 
           <div className="space-y-4">
             <ReceiptRow label="Product" value={product?.name || '—'} />
-            <ReceiptRow label="Price" value={product ? `$${product.price}` : '—'} />
+            <ReceiptRow
+              label="Price"
+              value={product ? `$${product.price}` : '—'}
+            />
             <ReceiptRow label="Category" value={product?.category || '—'} />
           </div>
+
+          {product?.image && (
+            <div className="mt-5">
+              <div className="mb-2 text-sm font-medium text-slate-700">
+                Product image
+              </div>
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-40 w-40 rounded-2xl border border-slate-200 object-cover"
+              />
+            </div>
+          )}
         </div>
 
         <div className="border-b border-slate-200 px-6 py-5">
           <div className="mb-4">
-            <div className="text-base font-semibold text-slate-900">Issue details</div>
+            <div className="text-base font-semibold text-slate-900">
+              Issue details
+            </div>
             <div className="mt-1 text-sm text-slate-500">
               Subject and customer description
             </div>

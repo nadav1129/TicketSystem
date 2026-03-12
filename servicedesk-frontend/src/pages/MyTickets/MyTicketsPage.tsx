@@ -1,13 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayot from '../../components/AppLayot';
 
 type PageMode = 'customer' | 'agent';
 
-type Profile = {
-  id: string;
+type DbUser = {
+  id: number;
+  roleCode: string;
   roleLabel: string;
   name: string;
+  email: string;
+  phone: string;
+};
+
+type Ticket = {
+  id: number;
+  ticketNumber: number;
+  product: string;
+  status: string;
+  priority: string;
+  date: string;
+  image: string;
+  unread: boolean;
+  customer?: string | null;
+};
+
+type MyTicketsResponse = {
+  userId: number;
+  viewerType: PageMode;
+  name: string;
+  roleLabel: string;
   subtitle: string;
   email: string;
   phone: string;
@@ -16,347 +38,136 @@ type Profile = {
   waitingReplies: number;
   resolvedThisMonth: number;
   averageResolution: string;
+  tickets: Ticket[];
 };
 
-type BaseTicket = {
-  id: string;
-  product: string;
-  status: string;
-  priority: string;
-  date: string;
-  image: string;
-  unread: boolean;
-};
-
-type CustomerTicket = BaseTicket;
-
-type AgentTicket = BaseTicket & {
-  customer: string;
-};
-
-type Ticket = CustomerTicket | AgentTicket;
-
-const customers: Profile[] = [
-  {
-    id: 'customer-1',
-    roleLabel: 'Customer',
-    name: 'Dana Levy',
-    subtitle: 'Premium support customer',
-    email: 'dana.levy@example.com',
-    phone: '+972 54-321-7788',
-    openTickets: 3,
-    totalTickets: 12,
-    waitingReplies: 2,
-    resolvedThisMonth: 4,
-    averageResolution: '2.4 days',
-  },
-  {
-    id: 'customer-2',
-    roleLabel: 'Customer',
-    name: 'Maya Cohen',
-    subtitle: 'Home appliances customer',
-    email: 'maya.cohen@example.com',
-    phone: '+972 54-112-8841',
-    openTickets: 2,
-    totalTickets: 9,
-    waitingReplies: 1,
-    resolvedThisMonth: 3,
-    averageResolution: '1.9 days',
-  },
-  {
-    id: 'customer-3',
-    roleLabel: 'Customer',
-    name: 'Amit Ben David',
-    subtitle: 'Extended warranty customer',
-    email: 'amit.bd@example.com',
-    phone: '+972 52-662-1104',
-    openTickets: 4,
-    totalTickets: 15,
-    waitingReplies: 3,
-    resolvedThisMonth: 5,
-    averageResolution: '2.8 days',
-  },
-];
-
-const agents: Profile[] = [
-  {
-    id: 'agent-1',
-    roleLabel: 'Agent',
-    name: 'Shira Azulay',
-    subtitle: 'Senior repair desk agent',
-    email: 'shira.azulay@servicedesk.io',
-    phone: '+972 52-891-4411',
-    openTickets: 8,
-    totalTickets: 34,
-    waitingReplies: 5,
-    resolvedThisMonth: 19,
-    averageResolution: '1.7 days',
-  },
-  {
-    id: 'agent-2',
-    roleLabel: 'Agent',
-    name: 'Lior Ben Ami',
-    subtitle: 'Warranty support specialist',
-    email: 'lior.benami@servicedesk.io',
-    phone: '+972 50-421-9941',
-    openTickets: 6,
-    totalTickets: 27,
-    waitingReplies: 2,
-    resolvedThisMonth: 15,
-    averageResolution: '1.4 days',
-  },
-  {
-    id: 'agent-3',
-    roleLabel: 'Agent',
-    name: 'Noa Mizrahi',
-    subtitle: 'Escalation desk agent',
-    email: 'noa.mizrahi@servicedesk.io',
-    phone: '+972 54-555-2114',
-    openTickets: 10,
-    totalTickets: 41,
-    waitingReplies: 6,
-    resolvedThisMonth: 21,
-    averageResolution: '1.6 days',
-  },
-];
-
-const customerTicketsByProfile: Record<string, CustomerTicket[]> = {
-  'customer-1': [
-    {
-      id: '#6201',
-      product: 'Smart Blender X2',
-      status: 'Open',
-      priority: 'Critical',
-      date: '2026-03-11',
-      image: 'SB',
-      unread: true,
-    },
-    {
-      id: '#6189',
-      product: 'Coffee Machine Elite',
-      status: 'New',
-      priority: 'High',
-      date: '2026-03-10',
-      image: 'CM',
-      unread: true,
-    },
-    {
-      id: '#6142',
-      product: 'Air Fryer Duo',
-      status: 'Waiting for Pickup',
-      priority: 'Medium',
-      date: '2026-03-05',
-      image: 'AF',
-      unread: false,
-    },
-  ],
-  'customer-2': [
-    {
-      id: '#6234',
-      product: 'Air Purifier Pro',
-      status: 'In Progress',
-      priority: 'High',
-      date: '2026-03-12',
-      image: 'AP',
-      unread: true,
-    },
-    {
-      id: '#6177',
-      product: 'Steam Iron Max',
-      status: 'Open',
-      priority: 'Medium',
-      date: '2026-03-08',
-      image: 'SI',
-      unread: false,
-    },
-  ],
-  'customer-3': [
-    {
-      id: '#6251',
-      product: 'Vacuum Cleaner S9',
-      status: 'Escalated',
-      priority: 'Critical',
-      date: '2026-03-12',
-      image: 'VC',
-      unread: true,
-    },
-    {
-      id: '#6208',
-      product: 'Portable Heater Go',
-      status: 'Waiting for Parts',
-      priority: 'Medium',
-      date: '2026-03-10',
-      image: 'PH',
-      unread: true,
-    },
-    {
-      id: '#6133',
-      product: 'Coffee Machine Elite',
-      status: 'Resolved',
-      priority: 'Low',
-      date: '2026-03-03',
-      image: 'CM',
-      unread: false,
-    },
-  ],
-};
-
-const agentTicketsByProfile: Record<string, AgentTicket[]> = {
-  'agent-1': [
-    {
-      id: '#6201',
-      customer: 'Dana Levy',
-      product: 'Smart Blender X2',
-      status: 'Open',
-      priority: 'Critical',
-      date: '2026-03-11',
-      image: 'SB',
-      unread: true,
-    },
-    {
-      id: '#6198',
-      customer: 'Maya Cohen',
-      product: 'Air Purifier Pro',
-      status: 'In Progress',
-      priority: 'High',
-      date: '2026-03-10',
-      image: 'AP',
-      unread: false,
-    },
-    {
-      id: '#6193',
-      customer: 'Amit Ben David',
-      product: 'Vacuum Cleaner S9',
-      status: 'Waiting for Parts',
-      priority: 'Medium',
-      date: '2026-03-09',
-      image: 'VC',
-      unread: true,
-    },
-    {
-      id: '#6176',
-      customer: 'Lior Kadosh',
-      product: 'Portable Heater Go',
-      status: 'Escalated',
-      priority: 'Critical',
-      date: '2026-03-08',
-      image: 'PH',
-      unread: true,
-    },
-  ],
-  'agent-2': [
-    {
-      id: '#6250',
-      customer: 'Noa Mizrahi',
-      product: 'Steam Iron Max',
-      status: 'Open',
-      priority: 'Medium',
-      date: '2026-03-12',
-      image: 'SI',
-      unread: false,
-    },
-    {
-      id: '#6242',
-      customer: 'Maya Cohen',
-      product: 'Coffee Machine Elite',
-      status: 'New',
-      priority: 'High',
-      date: '2026-03-11',
-      image: 'CM',
-      unread: true,
-    },
-    {
-      id: '#6210',
-      customer: 'Dana Levy',
-      product: 'Air Fryer Duo',
-      status: 'Waiting for Pickup',
-      priority: 'Low',
-      date: '2026-03-10',
-      image: 'AF',
-      unread: false,
-    },
-  ],
-  'agent-3': [
-    {
-      id: '#6261',
-      customer: 'Amit Ben David',
-      product: 'Portable Heater Go',
-      status: 'Escalated',
-      priority: 'Critical',
-      date: '2026-03-12',
-      image: 'PH',
-      unread: true,
-    },
-    {
-      id: '#6238',
-      customer: 'Dana Levy',
-      product: 'Smart Blender X2',
-      status: 'In Progress',
-      priority: 'High',
-      date: '2026-03-11',
-      image: 'SB',
-      unread: true,
-    },
-    {
-      id: '#6202',
-      customer: 'Maya Cohen',
-      product: 'Air Purifier Pro',
-      status: 'Waiting for Parts',
-      priority: 'Medium',
-      date: '2026-03-09',
-      image: 'AP',
-      unread: false,
-    },
-  ],
+const emptyProfile: MyTicketsResponse = {
+  userId: 0,
+  viewerType: 'customer',
+  name: '',
+  roleLabel: '',
+  subtitle: '',
+  email: '',
+  phone: '',
+  openTickets: 0,
+  totalTickets: 0,
+  waitingReplies: 0,
+  resolvedThisMonth: 0,
+  averageResolution: '—',
+  tickets: [],
 };
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
+
   const [pageMode, setPageMode] = useState<PageMode>('customer');
-  const [selectedCustomerId, setSelectedCustomerId] = useState(customers[0].id);
-  const [selectedAgentId, setSelectedAgentId] = useState(agents[0].id);
+  const [users, setUsers] = useState<DbUser[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [profile, setProfile] = useState<MyTicketsResponse>(emptyProfile);
   const [search, setSearch] = useState('');
+  const [isUsersLoading, setIsUsersLoading] = useState(true);
+  const [isTicketsLoading, setIsTicketsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const selectedProfileId =
-    pageMode === 'customer' ? selectedCustomerId : selectedAgentId;
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        setError('');
+        setUsers([]);
+        setSelectedUserId(null);
+        setProfile({
+          ...emptyProfile,
+          viewerType: pageMode,
+        });
 
-  const profile =
-    pageMode === 'customer'
-      ? customers.find((item) => item.id === selectedCustomerId) ?? customers[0]
-      : agents.find((item) => item.id === selectedAgentId) ?? agents[0];
+        const response = await fetch(
+          `http://localhost:8080/api/tickets/my-tickets/users?role=${pageMode}`,
+        );
 
-  const tickets: Ticket[] =
-    pageMode === 'customer'
-      ? customerTicketsByProfile[selectedCustomerId] ?? []
-      : agentTicketsByProfile[selectedAgentId] ?? [];
+        if (!response.ok) {
+          throw new Error(`Failed to load ${pageMode} users. Status: ${response.status}`);
+        }
 
-  const filteredTickets: Ticket[] = useMemo(() => {
+        const data: DbUser[] = await response.json();
+        setUsers(data);
+
+        if (data.length > 0) {
+          setSelectedUserId(data[0].id);
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(message);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [pageMode]);
+
+  useEffect(() => {
+    if (selectedUserId == null) {
+      return;
+    }
+
+    const loadMyTickets = async () => {
+      try {
+        setIsTicketsLoading(true);
+        setError('');
+
+        const response = await fetch(
+          `http://localhost:8080/api/tickets/my-tickets/${pageMode}/${selectedUserId}`,
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to load tickets. Status: ${response.status}`);
+        }
+
+        const data: MyTicketsResponse = await response.json();
+        setProfile(data);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(message);
+      } finally {
+        setIsTicketsLoading(false);
+      }
+    };
+
+    loadMyTickets();
+  }, [pageMode, selectedUserId]);
+
+  const filteredTickets = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return tickets;
+    if (!q) return profile.tickets;
 
-    return tickets.filter((ticket) => {
+    return profile.tickets.filter((ticket) => {
       const values = [
-        ticket.id,
+        String(ticket.ticketNumber),
         ticket.product,
         ticket.status,
         ticket.priority,
         ticket.date,
-        'customer' in ticket ? ticket.customer : '',
+        ticket.customer ?? '',
       ]
         .join(' ')
         .toLowerCase();
 
       return values.includes(q);
     });
-  }, [search, tickets]);
+  }, [search, profile.tickets]);
 
-  const openTicket = (ticketId: string) => {
-    const viewerType = pageMode === 'agent' ? 'agent' : 'customer';
-
-    navigate(`/${viewerType}/tickets/${ticketId.replace('#', '')}`, {
+  const openTicket = (ticket: Ticket) => {
+    navigate(`/${pageMode}/tickets/${ticket.id}`, {
       state: {
         allowReply: true,
         source: 'my-tickets',
+        viewerType: pageMode,
+        viewerUserId: profile.userId,
+        viewerName: profile.name,
+        ticketNumber: ticket.ticketNumber,
       },
     });
   };
@@ -366,24 +177,34 @@ export default function MyTicketsPage() {
     if (value === 'New') return 'bg-sky-100 text-sky-700';
     if (value === 'In Progress') return 'bg-indigo-100 text-indigo-700';
     if (value === 'Escalated') return 'bg-rose-100 text-rose-700';
-    if (value === 'Waiting for Parts' || value === 'Waiting for Pickup') {
+    if (value === 'Waiting for Parts' || value === 'Waiting for Pickup' || value === 'Waiting Customer') {
       return 'bg-violet-100 text-violet-700';
     }
-    if (value === 'Resolved') return 'bg-emerald-100 text-emerald-700';
+    if (value === 'Resolved' || value === 'Closed') return 'bg-emerald-100 text-emerald-700';
     return 'bg-slate-100 text-slate-700';
   };
 
   const priorityClass = (value: string) => {
-    if (value === 'Critical') return 'bg-rose-100 text-rose-700';
+    if (value === 'Critical' || value === 'Urgent') return 'bg-rose-100 text-rose-700';
     if (value === 'High') return 'bg-orange-100 text-orange-700';
     if (value === 'Medium') return 'bg-amber-100 text-amber-700';
     return 'bg-slate-100 text-slate-700';
   };
 
+  const profileInitials =
+    profile.name.trim().length > 0
+      ? profile.name
+          .split(' ')
+          .map((part) => part[0])
+          .join('')
+          .slice(0, 2)
+          .toUpperCase()
+      : '--';
+
   return (
     <AppLayot
       title={pageMode === 'customer' ? 'Customer Profile' : 'Agent Workspace'}
-      subtitle={`Focused page for all open tickets that belong to one ${
+      subtitle={`Focused page for all tickets that belong to one ${
         pageMode === 'customer' ? 'customer' : 'agent'
       }.`}
       action={
@@ -412,19 +233,20 @@ export default function MyTicketsPage() {
           </div>
 
           <select
-            value={selectedProfileId}
-            onChange={(e) =>
-              pageMode === 'customer'
-                ? setSelectedCustomerId(e.target.value)
-                : setSelectedAgentId(e.target.value)
-            }
+            value={selectedUserId ?? ''}
+            onChange={(e) => setSelectedUserId(Number(e.target.value))}
             className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+            disabled={isUsersLoading || users.length === 0}
           >
-            {(pageMode === 'customer' ? customers : agents).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
+            {users.length === 0 ? (
+              <option value="">No users found</option>
+            ) : (
+              users.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))
+            )}
           </select>
 
           <input
@@ -437,23 +259,26 @@ export default function MyTicketsPage() {
       }
     >
       <section className="space-y-6 p-6">
+        {error && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
         <div className="overflow-hidden rounded-[28px] border border-slate-300 bg-white">
           <div className="grid gap-5 p-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.95fr)]">
             <div className="flex gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-900 text-lg font-semibold text-white">
-                {profile.name
-                  .split(' ')
-                  .map((part) => part[0])
-                  .join('')}
+                {profileInitials}
               </div>
 
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-xl font-semibold tracking-tight">
-                    {profile.name}
+                    {isTicketsLoading ? 'Loading...' : profile.name || 'No profile selected'}
                   </h2>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                    {profile.roleLabel}
+                    {profile.roleLabel || (pageMode === 'customer' ? 'Customer' : 'Agent')}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">{profile.subtitle}</p>
@@ -499,10 +324,10 @@ export default function MyTicketsPage() {
                 Average resolution: {profile.averageResolution}
               </span>
               <span className="rounded-full bg-white px-3 py-1.5">
-                Unread updates: {tickets.filter((ticket) => ticket.unread).length}
+                Unread updates: {profile.tickets.filter((ticket) => ticket.unread).length}
               </span>
               <span className="rounded-full bg-white px-3 py-1.5">
-                Showing open-ticket focused timeline
+                Viewer mode: {pageMode}
               </span>
             </div>
           </div>
@@ -511,110 +336,79 @@ export default function MyTicketsPage() {
         <div className="rounded-[28px] border border-slate-300 bg-white">
           <div className="flex items-center justify-between border-b px-6 py-5">
             <div>
-              <h3 className="text-lg font-semibold">Open tickets list</h3>
+              <h3 className="text-lg font-semibold">Connected tickets</h3>
               <p className="mt-1 text-sm text-slate-500">
-                Customer view shows status, messages, and date. Agent view adds priority.
+                Customer view shows the customer’s tickets. Agent view shows assigned tickets.
               </p>
             </div>
             <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-              {filteredTickets.length} rows
+              {isTicketsLoading ? 'Loading...' : `${filteredTickets.length} rows`}
             </div>
           </div>
 
           <div className="divide-y">
+            {!isTicketsLoading && filteredTickets.length === 0 && (
+              <div className="px-6 py-12 text-center text-sm text-slate-500">
+                No tickets found for this user.
+              </div>
+            )}
+
             {filteredTickets.map((ticket) => (
               <div
                 key={ticket.id}
-                onClick={() => openTicket(ticket.id)}
+                onClick={() => openTicket(ticket)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    openTicket(ticket.id);
+                    openTicket(ticket);
                   }
                 }}
                 tabIndex={0}
-                className="relative cursor-pointer p-5 transition hover:bg-slate-50/70 focus:bg-slate-50/70 focus:outline-none"
+                className="cursor-pointer px-6 py-4 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
               >
-                {ticket.unread && (
-                  <div className="absolute right-5 top-5 h-3 w-3 rounded-full bg-orange-400" />
-                )}
-
-                <div
-                  className={`grid min-w-0 gap-4 pr-10 ${
-                    pageMode === 'agent'
-                      ? 'xl:grid-cols-[minmax(0,1.35fr)_140px_120px_140px_120px] xl:items-center'
-                      : 'xl:grid-cols-[minmax(0,1.5fr)_140px_160px_120px] xl:items-center'
-                  }`}
-                >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-sm font-semibold text-slate-700">
                       {ticket.image}
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="text-base font-semibold text-slate-900">
-                          {ticket.id}
-                        </div>
-                        {pageMode === 'agent' && 'customer' in ticket && (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                            {ticket.customer}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-900">
+                          #{ticket.ticketNumber}
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span className="truncate text-slate-700">{ticket.product}</span>
+                        {ticket.unread && (
+                          <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-700">
+                            New reply
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 truncate text-sm text-slate-600">
-                        {ticket.product}
+
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                        <span>{ticket.date}</span>
+                        {pageMode === 'agent' && ticket.customer && (
+                          <>
+                            <span>•</span>
+                            <span>{ticket.customer}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                      Status
-                    </div>
-                    <div className="mt-2">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(ticket.status)}`}
-                      >
-                        {ticket.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {pageMode === 'agent' && (
-                    <div>
-                      <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                        Priority
-                      </div>
-                      <div className="mt-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityClass(ticket.priority)}`}
-                        >
-                          {ticket.priority}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                      Messages
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                      <span>{ticket.unread ? 'New message' : 'No new messages'}</span>
-                      {ticket.unread && (
-                        <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                      Date
-                    </div>
-                    <div className="mt-2 text-sm font-medium text-slate-700">
-                      {ticket.date}
-                    </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(ticket.status)}`}
+                    >
+                      {ticket.status}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityClass(ticket.priority)}`}
+                    >
+                      {ticket.priority}
+                    </span>
                   </div>
                 </div>
               </div>

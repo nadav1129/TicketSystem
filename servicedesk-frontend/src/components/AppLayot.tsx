@@ -9,8 +9,8 @@ type AppLayoutProps = {
 };
 
 const navItems = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Tickets', to: '/tickets' },
+  { label: 'Home', to: '/dashboard' },
+  { label: 'All Tickets', to: '/tickets' },
   { label: 'My Tickets', to: '/my-tickets' },
   { label: 'Settings', to: '/settings' },
 ];

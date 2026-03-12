@@ -1,4 +1,4 @@
-import { subjects } from './ticketSubmission.data';
+import { issueTypeOptions } from './ticketSubmission.data';
 import type { TicketSubmissionForm } from './ticketSubmission.types';
 
 type Step3IssueDetailsProps = {
@@ -7,6 +7,13 @@ type Step3IssueDetailsProps = {
 };
 
 export default function Step3IssueDetails({ form, onChange }: Step3IssueDetailsProps) {
+  const handleSubjectChange = (value: string) => {
+    const selected = issueTypeOptions.find((item) => item.id === value);
+
+    onChange('issueTypeId', value);
+    onChange('subject', selected ? selected.label : '');
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -17,14 +24,14 @@ export default function Step3IssueDetails({ form, onChange }: Step3IssueDetailsP
       <label className="block">
         <div className="mb-2 text-sm font-medium text-slate-700">Subject</div>
         <select
-          value={form.subject}
-          onChange={(e) => onChange('subject', e.target.value)}
+          value={form.issueTypeId}
+          onChange={(e) => handleSubjectChange(e.target.value)}
           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
         >
           <option value="">Select a subject</option>
-          {subjects.map((subject) => (
-            <option key={subject} value={subject}>
-              {subject}
+          {issueTypeOptions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
             </option>
           ))}
         </select>

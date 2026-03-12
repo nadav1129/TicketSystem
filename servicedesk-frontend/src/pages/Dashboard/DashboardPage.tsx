@@ -54,13 +54,16 @@ export default function DashboardPage() {
   const [voiceState, setVoiceState] = useState<VoiceState>("connecting");
 
   const openTicket = (ticketId: string) => {
-    navigate(`/agent/tickets/${ticketId.replace("#", "")}`, {
-      state: {
-        allowReply: false,
-        source: "dashboard",
+  navigate(`/agent/tickets/${ticketId.replace("#", "")}`, {
+    state: {
+      allowReply: false,
+      source: "dashboard",
+      viewerType: "agent",
+      viewerUserId: 0,
+      viewerName: "Viewer mode",
       },
     });
-  };
+  } ;
 
   return (
     <AppLayot

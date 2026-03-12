@@ -1,9 +1,10 @@
 export type SubmissionStep = 1 | 2 | 3 | 4;
 
-export type ProductCategory = 'Kitchen' | 'Cleaning' | 'Climate' | 'Coffee';
+export type ProductCategory = string;
 
 export type Product = {
   id: string;
+  externalId: number;
   name: string;
   category: ProductCategory;
   price: number;
@@ -22,6 +23,7 @@ export type TicketSubmissionForm = {
   email: string;
   name: string;
   productId: string;
-  subject: TicketSubject | '';
+  subject: string;
   message: string;
+  issueTypeId: string;
 };

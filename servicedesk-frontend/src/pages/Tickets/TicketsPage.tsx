@@ -1,82 +1,29 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
 
-const allTickets = [
-  {
-    id: "#6201",
-    requester: "Dana Levy",
-    product: "Smart Blender X2",
-    channel: "Phone",
-    priority: "Critical",
-    status: "Open",
-    date: "2026-03-11",
-  },
-  {
-    id: "#6198",
-    requester: "Maya Cohen",
-    product: "Air Purifier Pro",
-    channel: "Web",
-    priority: "High",
-    status: "In Progress",
-    date: "2026-03-10",
-  },
-  {
-    id: "#6193",
-    requester: "Amit Ben David",
-    product: "Vacuum Cleaner S9",
-    channel: "Email",
-    priority: "Medium",
-    status: "Waiting for Parts",
-    date: "2026-03-09",
-  },
-  {
-    id: "#6189",
-    requester: "Noa Mizrahi",
-    product: "Coffee Machine Elite",
-    channel: "Voice",
-    priority: "High",
-    status: "New",
-    date: "2026-03-11",
-  },
-  {
-    id: "#6182",
-    requester: "Yossi Green",
-    product: "Robot Mop Mini",
-    channel: "Store",
-    priority: "Low",
-    status: "Resolved",
-    date: "2026-03-07",
-  },
-  {
-    id: "#6176",
-    requester: "Shira Azulay",
-    product: "Portable Heater Go",
-    channel: "Web",
-    priority: "Critical",
-    status: "Escalated",
-    date: "2026-03-08",
-  },
-  {
-    id: "#6170",
-    requester: "Lior Kadosh",
-    product: "Dishwasher Plus",
-    channel: "Phone",
-    priority: "Medium",
-    status: "Assigned",
-    date: "2026-03-06",
-  },
-  {
-    id: "#6164",
-    requester: "Roni Peretz",
-    product: "Smart Kettle One",
-    channel: "Marketplace",
-    priority: "Low",
-    status: "Closed",
-    date: "2026-03-05",
-  },
-];
+type ApiTicket = {
+  id: number;
+  ticketNumber?: number;
+  requesterName: string;
+  productName: string;
+  channel: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+};
+
+type UiTicket = {
+  id: string;
+  rawId: number;
+  requester: string;
+  product: string;
+  channel: string;
+  priority: string;
+  status: string;
+  date: string;
+};
 
 const priorityOptions = ["Critical", "High", "Medium", "Low"];
 const statusOptions = [
@@ -98,24 +45,97 @@ const channelOptions = [
   "Marketplace",
 ];
 
+function toTitleCase(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizePriority(value: string): string {
+  const normalized = toTitleCase(value);
+  if (priorityOptions.includes(normalized)) return normalized;
+  return normalized;
+}
+
+function normalizeStatus(value: string): string {
+  const normalized = toTitleCase(value);
+  if (normalized === "Inprogress") return "In Progress";
+  if (statusOptions.includes(normalized)) return normalized;
+  return normalized;
+}
+
+function normalizeChannel(value: string): string {
+  const normalized = toTitleCase(value);
+  if (channelOptions.includes(normalized)) return normalized;
+  return normalized;
+}
+
 export default function TicketsPage() {
   const navigate = useNavigate();
 
-  const openTicket = (ticketId: string) => {
-    navigate(`/agent/tickets/${ticketId.replace("#", "")}`);
-  };
+  const [tickets, setTickets] = useState<UiTicket[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+
   const [isTicketPanelOpen, setIsTicketPanelOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
-  const [priorities, setPriorities] = useState<string[]>(["Critical", "High"]);
-  const [statuses, setStatuses] = useState<string[]>([
-    "New",
-    "Open",
-    "In Progress",
-    "Escalated",
-  ]);
+  const [priorities, setPriorities] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
   const [channels, setChannels] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("Newest first");
+
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const response = await fetch("http://localhost:8080/api/tickets");
+
+        if (!response.ok) {
+          throw new Error(`Failed to load tickets. Status: ${response.status}`);
+        }
+
+        const data: ApiTicket[] = await response.json();
+
+        const mapped: UiTicket[] = data.map((ticket) => ({
+          id: `#${ticket.ticketNumber ?? ticket.id}`,
+          rawId: ticket.id,
+          requester: ticket.requesterName,
+          product: ticket.productName,
+          channel: normalizeChannel(ticket.channel),
+          priority: normalizePriority(ticket.priority),
+          status: normalizeStatus(ticket.status),
+          date: new Date(ticket.createdAt).toISOString().slice(0, 10),
+        }));
+
+        setTickets(mapped);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unknown error occurred";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTickets();
+  }, []);
+
+  const openTicket = (ticketId: number) => {
+    navigate(`/agent/tickets/${ticketId}`, {
+      state: {
+        allowReply: false,
+        source: "tickets",
+        viewerType: "agent",
+        viewerUserId: 0,
+        viewerName: "Viewer mode",
+      },
+    });
+  };
 
   const toggleValue = (
     value: string,
@@ -132,7 +152,7 @@ export default function TicketsPage() {
   const filteredTickets = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    const result = allTickets.filter((ticket) => {
+    const result = tickets.filter((ticket) => {
       const matchesSearch =
         normalizedSearch.length === 0 ||
         [
@@ -169,15 +189,15 @@ export default function TicketsPage() {
         );
       return a.id.localeCompare(b.id);
     });
-  }, [search, priorities, statuses, channels, sortBy]);
+  }, [tickets, search, priorities, statuses, channels, sortBy]);
 
   const activeFilterCount =
     priorities.length + statuses.length + channels.length;
 
   const pillClass = (active: boolean) =>
-    `rounded-xl border px-3 py-2 text-sm transition ${
+    `rounded-lg border px-2.5 py-1.5 text-xs transition ${
       active
-        ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+        ? "border-sky-200 bg-sky-50 text-sky-700"
         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
     }`;
 
@@ -200,7 +220,7 @@ export default function TicketsPage() {
   return (
     <AppLayot
       title="Tickets"
-      subtitle="Browse all faulty-product service requests and narrow them down with a Steam-inspired filter experience."
+      subtitle="Browse all faulty-product service requests and narrow them down with quick filters."
       action={
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <input
@@ -219,32 +239,32 @@ export default function TicketsPage() {
       }
     >
       <section className="p-6">
-        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="rounded-3xl border border-slate-300 bg-[#3b3d46] p-5 text-slate-100 shadow-none">
-            <div className="flex items-center justify-between">
+        <div className="space-y-4">
+          <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="text-3xl font-bold tracking-tight text-white">
+                <div className="text-lg font-semibold text-slate-900">
                   Library Filters
                 </div>
-                <div className="mt-1 text-sm text-slate-300">
-                  Ticket discovery, inspired by Steam’s filter panel.
+                <div className="text-xs text-slate-500">
+                  Narrow your ticket list quickly.
                 </div>
               </div>
               <button
                 onClick={() => setIsFiltersOpen((v) => !v)}
-                className="rounded-xl border border-slate-500 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-700"
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs text-slate-600 transition hover:bg-slate-50"
               >
                 {isFiltersOpen ? "Collapse" : "Expand"}
               </button>
             </div>
 
             {isFiltersOpen && (
-              <div className="mt-6 space-y-6">
+              <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Priority
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {priorityOptions.map((item) => (
                       <button
                         key={item}
@@ -260,10 +280,10 @@ export default function TicketsPage() {
                 </div>
 
                 <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Status
                   </div>
-                  <div className="grid gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {statusOptions.map((item) => (
                       <button
                         key={item}
@@ -277,10 +297,10 @@ export default function TicketsPage() {
                 </div>
 
                 <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                     Channel
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {channelOptions.map((item) => (
                       <button
                         key={item}
@@ -293,155 +313,173 @@ export default function TicketsPage() {
                   </div>
                 </div>
 
-                <div>
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
-                    Sorting
+                <div className="space-y-3">
+                  <div>
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      Sorting
+                    </div>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+                    >
+                      <option>Newest first</option>
+                      <option>Oldest first</option>
+                      <option>Priority</option>
+                      <option>Ticket number</option>
+                    </select>
                   </div>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full rounded-xl border border-slate-600 bg-slate-700 px-3 py-2.5 text-sm text-white outline-none"
-                  >
-                    <option>Newest first</option>
-                    <option>Oldest first</option>
-                    <option>Priority</option>
-                    <option>Ticket number</option>
-                  </select>
-                </div>
 
-                <div className="flex flex-wrap gap-2 border-t border-slate-600 pt-4">
-                  <button
-                    onClick={() => {
-                      setPriorities([]);
-                      setStatuses([]);
-                      setChannels([]);
-                    }}
-                    className="rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-900"
-                  >
-                    Clear all filters
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPriorities(["Critical", "High"]);
-                      setStatuses(["New", "Open", "In Progress", "Escalated"]);
-                      setChannels([]);
-                    }}
-                    className="rounded-xl border border-slate-500 px-3 py-2 text-sm text-slate-200"
-                  >
-                    Load triage preset
-                  </button>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setPriorities([]);
+                        setStatuses([]);
+                        setChannels([]);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Clear all
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPriorities(["Critical", "High"]);
+                        setStatuses(["New", "Open", "In Progress", "Escalated"]);
+                        setChannels([]);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100"
+                    >
+                      Triage preset
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
-          </aside>
+          </div>
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-3xl border border-slate-300 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="text-sm text-slate-500">Showing results</div>
-                <div className="mt-1 text-2xl font-semibold">
-                  {filteredTickets.length} tickets
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {activeFilterCount > 0 ? (
-                  <>
-                    {priorities.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
-                      >
-                        Priority: {item}
-                      </span>
-                    ))}
-                    {statuses.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
-                      >
-                        Status: {item}
-                      </span>
-                    ))}
-                    {channels.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700"
-                      >
-                        Channel: {item}
-                      </span>
-                    ))}
-                  </>
-                ) : (
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                    No filters selected
-                  </span>
-                )}
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-300 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="text-sm text-slate-500">Showing results</div>
+              <div className="mt-1 text-2xl font-semibold">
+                {isLoading ? "Loading..." : `${filteredTickets.length} tickets`}
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] text-left text-sm">
-                  <thead className="bg-slate-50 text-slate-500">
+            <div className="flex flex-wrap gap-2">
+              {activeFilterCount > 0 ? (
+                <>
+                  {priorities.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white"
+                    >
+                      Priority: {item}
+                    </span>
+                  ))}
+                  {statuses.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
+                    >
+                      Status: {item}
+                    </span>
+                  ))}
+                  {channels.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700"
+                    >
+                      Channel: {item}
+                    </span>
+                  ))}
+                </>
+              ) : (
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                  No filters selected
+                </span>
+              )}
+            </div>
+          </div>
+
+          {error && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
+
+          <div className="overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[980px] text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th className="px-5 py-4 font-medium">Ticket num</th>
+                    <th className="px-5 py-4 font-medium">Requester</th>
+                    <th className="px-5 py-4 font-medium">Product name</th>
+                    <th className="px-5 py-4 font-medium">Channel</th>
+                    <th className="px-5 py-4 font-medium">Priority</th>
+                    <th className="px-5 py-4 font-medium">Status</th>
+                    <th className="px-5 py-4 font-medium">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!isLoading && filteredTickets.length === 0 && (
                     <tr>
-                      <th className="px-5 py-4 font-medium">Ticket num</th>
-                      <th className="px-5 py-4 font-medium">Requester</th>
-                      <th className="px-5 py-4 font-medium">Product name</th>
-                      <th className="px-5 py-4 font-medium">Channel</th>
-                      <th className="px-5 py-4 font-medium">Priority</th>
-                      <th className="px-5 py-4 font-medium">Status</th>
-                      <th className="px-5 py-4 font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTickets.map((ticket) => (
-                      <tr
-                        key={ticket.id}
-                        onClick={() => openTicket(ticket.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            openTicket(ticket.id);
-                          }
-                        }}
-                        tabIndex={0}
-                        className="cursor-pointer border-t transition hover:bg-slate-50/80 focus:bg-slate-50/80 focus:outline-none"
+                      <td
+                        colSpan={7}
+                        className="px-5 py-10 text-center text-slate-500"
                       >
-                        <td className="px-5 py-4 font-semibold text-slate-900">
-                          {ticket.id}
-                        </td>
-                        <td className="px-5 py-4">{ticket.requester}</td>
-                        <td className="px-5 py-4 text-slate-600">
-                          {ticket.product}
-                        </td>
-                        <td className="px-5 py-4">{ticket.channel}</td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.priority, "priority")}`}
-                          >
-                            {ticket.priority}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.status, "status")}`}
-                          >
-                            {ticket.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-slate-500">
-                          {ticket.date}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        No tickets found.
+                      </td>
+                    </tr>
+                  )}
+
+                  {filteredTickets.map((ticket) => (
+                    <tr
+                      key={ticket.rawId}
+                      onClick={() => openTicket(ticket.rawId)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openTicket(ticket.rawId);
+                        }
+                      }}
+                      tabIndex={0}
+                      className="cursor-pointer border-t transition hover:bg-slate-50/80 focus:bg-slate-50/80 focus:outline-none"
+                    >
+                      <td className="px-5 py-4 font-semibold text-slate-900">
+                        {ticket.id}
+                      </td>
+                      <td className="px-5 py-4">{ticket.requester}</td>
+                      <td className="px-5 py-4 text-slate-600">
+                        {ticket.product}
+                      </td>
+                      <td className="px-5 py-4">{ticket.channel}</td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.priority, "priority")}`}
+                        >
+                          {ticket.priority}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(ticket.status, "status")}`}
+                        >
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-500">
+                        {ticket.date}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </section>
+
       {isTicketPanelOpen && (
         <TicketSubmitionPannel
           open={isTicketPanelOpen}

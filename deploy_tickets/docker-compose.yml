@@ -11,3 +11,47 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
+
+  db:
+    image: postgres:16
+    container_name: supportticket-db
+    environment:
+      POSTGRES_DB: support_ticket_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d support_ticket_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: ../back/SupportTicket.Api
+      dockerfile: Dockerfile.dev
+    container_name: supportticket-api
+    working_dir: /src
+    command: dotnet watch run --urls=http://0.0.0.0:8080
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=support_ticket_db;Username=postgres;Password=postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../back/SupportTicket.Api:/src
+      - /src/bin
+      - /src/obj
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

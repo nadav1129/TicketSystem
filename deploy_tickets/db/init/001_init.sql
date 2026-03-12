@@ -168,6 +168,9 @@ CREATE TABLE IF NOT EXISTS tickets (
     resolved_at TIMESTAMPTZ,
     last_message_at TIMESTAMPTZ,
 
+    costumer_raiting SMALLINT CHECK (costumer_raiting >= 1 AND costumer_raiting <= 5),
+    costumer_comment TEXT,
+
     CONSTRAINT chk_tickets_customer_agent_different
         CHECK (assigned_agent_id IS NULL OR assigned_agent_id <> customer_id),
 
@@ -362,5 +365,19 @@ INSERT INTO product_categories (name) VALUES
 ('Home'),
 ('Accessories')
 ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO users (role_id, full_name, email, phone)
+SELECT r.id, v.full_name, v.email, v.phone
+FROM user_roles r
+CROSS JOIN (
+    VALUES
+        ('Daniel Cohen', 'daniel.cohen@support.local', '050-111-1111'),
+        ('Maya Levi', 'maya.levi@support.local', '050-222-2222'),
+        ('Omer Mizrahi', 'omer.mizrahi@support.local', '050-333-3333'),
+        ('Noa Avraham', 'noa.avraham@support.local', '050-444-4444'),
+        ('Yuval Bar', 'yuval.bar@support.local', '050-555-5555')
+) AS v(full_name, email, phone)
+WHERE r.code = 'agent'
+ON CONFLICT (email) DO NOTHING;
 
 COMMIT;
