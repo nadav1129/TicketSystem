@@ -5,6 +5,7 @@ import {
   Settings,
   Sparkles,
   Ticket,
+  ChartColumnBig,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
@@ -26,23 +27,24 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Home", to: "/dashboard", icon: LayoutDashboard },
   { label: "All Tickets", to: "/tickets", icon: Ticket },
+  { label: "Analytics", to: "/analytics", icon: ChartColumnBig },
   { label: "My Tickets", to: "/my-tickets", icon: ListChecks },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
 export default function AppLayout({ title, subtitle, action, children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-transparent text-slate-900">
+    <div className="min-h-screen bg-black text-zinc-100">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-slate-200/80 bg-white/80 backdrop-blur-xl lg:block">
-          <div className="border-b border-slate-200 px-6 py-6">
+        <aside className="hidden w-72 shrink-0 border-r border-zinc-900 bg-zinc-950 lg:block">
+          <div className="border-b border-zinc-900 px-6 py-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-emerald-300">
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-lg font-semibold tracking-tight text-slate-900">ServiceDesk</div>
-                <div className="text-xs text-slate-500">Prestige Control Center</div>
+                <div className="text-lg font-semibold tracking-tight text-zinc-100">ServiceDesk</div>
+                <div className="text-xs text-zinc-500">Prestige Control Center</div>
               </div>
             </div>
           </div>
@@ -57,10 +59,10 @@ export default function AppLayout({ title, subtitle, action, children }: AppLayo
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition",
+                      "flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition",
                       isActive
-                        ? "bg-slate-900 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                        ? "border border-zinc-700 bg-zinc-900 text-zinc-100"
+                        : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
                     )
                   }
                 >
@@ -73,11 +75,11 @@ export default function AppLayout({ title, subtitle, action, children }: AppLayo
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="border-b border-slate-200/80 bg-white/80 px-6 py-5 backdrop-blur-xl">
+          <header className="border-b border-zinc-900 bg-black px-6 py-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{title}</h1>
-                {subtitle ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p> : null}
+                <h1 className="text-3xl font-semibold tracking-tight text-zinc-100">{title}</h1>
+                {subtitle ? <p className="mt-1 text-sm text-zinc-500">{subtitle}</p> : null}
               </div>
               {action ? <div className="shrink-0">{action}</div> : null}
             </div>

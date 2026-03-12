@@ -6,14 +6,14 @@ type ButtonSize = "default" | "sm" | "lg" | "icon";
 
 const variantClass: Record<ButtonVariant, string> = {
   default:
-    "border border-slate-900 bg-slate-900 text-white shadow-sm hover:bg-slate-800",
+    "border border-zinc-700 bg-zinc-900 text-zinc-100 shadow-sm hover:bg-zinc-800",
   outline:
-    "border border-slate-200 bg-white text-slate-700 shadow-xs hover:bg-slate-50",
+    "border border-zinc-700 bg-zinc-950 text-zinc-200 shadow-xs hover:bg-zinc-900",
   secondary:
-    "border border-slate-100 bg-slate-100 text-slate-900 hover:bg-slate-200",
-  ghost: "border border-transparent bg-transparent text-slate-700 hover:bg-slate-100",
+    "border border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800",
+  ghost: "border border-transparent bg-transparent text-zinc-300 hover:bg-zinc-900",
   danger:
-    "border border-rose-600 bg-rose-600 text-white shadow-sm hover:bg-rose-700",
+    "border border-rose-700 bg-rose-700 text-white shadow-sm hover:bg-rose-600",
 };
 
 const sizeClass: Record<ButtonSize, string> = {
@@ -37,7 +37,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 disabled:pointer-events-none disabled:opacity-50",
         variantClass[variant],
         sizeClass[size],
         className,

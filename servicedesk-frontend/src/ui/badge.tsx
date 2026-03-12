@@ -11,13 +11,13 @@ type BadgeVariant =
   | "info";
 
 const variantClass: Record<BadgeVariant, string> = {
-  default: "bg-slate-900 text-white",
-  secondary: "bg-slate-100 text-slate-700",
-  outline: "border border-slate-200 bg-white text-slate-700",
-  success: "bg-emerald-100 text-emerald-700",
-  warning: "bg-amber-100 text-amber-700",
-  danger: "bg-rose-100 text-rose-700",
-  info: "bg-sky-100 text-sky-700",
+  default: "bg-zinc-200 text-zinc-900",
+  secondary: "bg-zinc-900 text-zinc-300",
+  outline: "border border-zinc-700 bg-zinc-950 text-zinc-300",
+  success: "bg-emerald-500/20 text-emerald-300",
+  warning: "bg-amber-500/20 text-amber-300",
+  danger: "bg-rose-500/20 text-rose-300",
+  info: "bg-sky-500/20 text-sky-300",
 };
 
 type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
