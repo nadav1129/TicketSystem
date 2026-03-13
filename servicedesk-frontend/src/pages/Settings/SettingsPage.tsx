@@ -1,32 +1,13 @@
 import { useMemo, useState } from "react";
 import { Moon, Sun, Palette, Check } from "lucide-react";
 import AppLayot from "../../components/AppLayot";
+import { useTheme } from "../../theme/theme-provider";
 
 const themes = [
   {
-    id: "default",
-    name: "Default",
-    description: "Clean light theme for the regular support workspace.",
-    icon: Sun,
-    shell: "bg-slate-50 text-slate-900",
-    card: "bg-white border-slate-200 text-slate-900",
-    preview: "bg-gradient-to-br from-white via-slate-50 to-slate-100",
-    chip: "bg-slate-900 text-white",
-    optionCard:
-      "bg-white border-slate-300 text-slate-900 hover:border-slate-400 hover:shadow-sm",
-    optionCardActive: "bg-white border-slate-900 text-slate-900 shadow-sm",
-    previewFrame: "border-slate-200",
-    previewBox: "border-slate-200 bg-white/70",
-    previewBox2: "border-slate-200 bg-white/50",
-    previewBox3: "border-slate-200 bg-white/30",
-    iconWrap: "bg-black/10 text-slate-700",
-    toggleRow: "border-black/10 bg-black/5",
-    infoBox: "border-slate-300",
-  },
-  {
-    id: "dark",
-    name: "Dark",
-    description: "Low-glare mode for long support shifts and night work.",
+    id: "black",
+    name: "Black",
+    description: "Default theme. Prestige black workspace with green accents.",
     icon: Moon,
     shell: "bg-slate-950 text-slate-100",
     card: "bg-slate-900 border-slate-800 text-slate-100",
@@ -44,9 +25,29 @@ const themes = [
     infoBox: "border-slate-700",
   },
   {
-    id: "khaki-camo",
-    name: "Khaki Camo",
-    description: "A muted field-style theme with a khaki camouflage pattern.",
+    id: "light",
+    name: "Light",
+    description: "High-contrast light workspace with white, grey, and green.",
+    icon: Sun,
+    shell: "bg-slate-50 text-slate-900",
+    card: "bg-white border-slate-200 text-slate-900",
+    preview: "bg-gradient-to-br from-white via-slate-50 to-slate-100",
+    chip: "bg-slate-900 text-white",
+    optionCard:
+      "bg-white border-slate-300 text-slate-900 hover:border-slate-400 hover:shadow-sm",
+    optionCardActive: "bg-white border-slate-900 text-slate-900 shadow-sm",
+    previewFrame: "border-slate-200",
+    previewBox: "border-slate-200 bg-white/70",
+    previewBox2: "border-slate-200 bg-white/50",
+    previewBox3: "border-slate-200 bg-white/30",
+    iconWrap: "bg-black/10 text-slate-700",
+    toggleRow: "border-black/10 bg-black/5",
+    infoBox: "border-slate-300",
+  },
+  {
+    id: "khaki",
+    name: "Khaki",
+    description: "Khaki and black palette with green highlights.",
     icon: Palette,
     shell: "text-stone-900",
     card: "border-[#8b8a63] bg-[#d6d0a7] text-stone-900",
@@ -64,8 +65,6 @@ const themes = [
     infoBox: "border-[#8b8a63]",
   },
 ] as const;
-
-type ThemeId = (typeof themes)[number]["id"];
 
 function CamoPreview() {
   return (
@@ -138,7 +137,7 @@ function ToggleRow({
 }
 
 export default function SettingsPage() {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeId>("dark");
+  const { theme: selectedTheme, setTheme } = useTheme();
   const [compactSidebar, setCompactSidebar] = useState(false);
   const [desktopNotifications, setDesktopNotifications] = useState(true);
   const [soundAlerts, setSoundAlerts] = useState(false);
@@ -163,7 +162,7 @@ export default function SettingsPage() {
     >
       <div
         className={`space-y-6 rounded-md p-1 transition-colors duration-300 ${
-          activeTheme.id === "khaki-camo" ? "bg-[#b8b17c]" : activeTheme.shell
+          activeTheme.id === "khaki" ? "bg-[#b8b17c]" : activeTheme.shell
         }`}
       >
         <section className={`rounded-md border p-6 ${activeTheme.card}`}>
@@ -173,8 +172,7 @@ export default function SettingsPage() {
             </div>
             <p className="mt-2 max-w-2xl text-sm opacity-75">
               Control the visual style of the ticket system. For now, this page
-              enables three appearance modes only: Default, Dark, and Khaki
-              Camo.
+              enables three appearance modes only: Black, Light, and Khaki.
             </p>
           </div>
         </section>
@@ -198,13 +196,13 @@ export default function SettingsPage() {
                   <button
                     key={theme.id}
                     type="button"
-                    onClick={() => setSelectedTheme(theme.id)}
+                    onClick={() => setTheme(theme.id)}
                     className={`appearance-none overflow-hidden rounded-md p-4 text-left outline-none transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
-                      theme.id === "dark"
+                      theme.id === "black"
                         ? isActive
                           ? "border-2 border-white bg-slate-950 text-slate-100"
                           : "border border-slate-700 bg-slate-950 text-slate-100 hover:border-slate-500"
-                        : theme.id === "khaki-camo"
+                        : theme.id === "khaki"
                           ? isActive
                             ? "border-2 border-[#5f6740] bg-[#f0ebc9] text-stone-900"
                             : "border border-[#8b8a63] bg-[#e3ddb8] text-stone-900 hover:border-[#6f7751]"
@@ -235,7 +233,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="h-32 overflow-hidden rounded-2xl">
-                      {theme.id === "khaki-camo" ? (
+                      {theme.id === "khaki" ? (
                         <CamoPreview />
                       ) : (
                         <div
@@ -276,7 +274,7 @@ export default function SettingsPage() {
                 onChange={() => setCompactSidebar((value) => !value)}
                 rowClassName={activeTheme.toggleRow}
                 textClassName={
-                  activeTheme.id === "dark" ? "text-slate-100" : ""
+                  activeTheme.id === "black" ? "text-slate-100" : ""
                 }
               />
               <ToggleRow
@@ -286,7 +284,7 @@ export default function SettingsPage() {
                 onChange={() => setDesktopNotifications((value) => !value)}
                 rowClassName={activeTheme.toggleRow}
                 textClassName={
-                  activeTheme.id === "dark" ? "text-slate-100" : ""
+                  activeTheme.id === "black" ? "text-slate-100" : ""
                 }
               />
               <ToggleRow
@@ -296,7 +294,7 @@ export default function SettingsPage() {
                 onChange={() => setSoundAlerts((value) => !value)}
                 rowClassName={activeTheme.toggleRow}
                 textClassName={
-                  activeTheme.id === "dark" ? "text-slate-100" : ""
+                  activeTheme.id === "black" ? "text-slate-100" : ""
                 }
               />
             </div>
@@ -305,7 +303,7 @@ export default function SettingsPage() {
               className={`mt-6 rounded-md border border-dashed p-4 text-sm opacity-80 ${activeTheme.infoBox}`}
             >
               Current enabled themes:{" "}
-              <span className="font-semibold">Default, Dark, Khaki Camo</span>
+              <span className="font-semibold">Black, Light, Khaki</span>
             </div>
           </div>
         </section>
