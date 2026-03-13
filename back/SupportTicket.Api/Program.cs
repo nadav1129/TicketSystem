@@ -1,6 +1,12 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SupportTicket.Api.Data;
 using SupportTicket.Api.Seed;
+using SupportTicket.Application.Chat.Interfaces;
+using SupportTicket.Application.Chat.Services;
+using SupportTicket.Infrastructure.Ai;
+using SupportTicket.Infrastructure.Persistence.Queries;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +17,18 @@ builder.Services.AddEndpointsApiExplorer();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                       ?? builder.Configuration["ConnectionStrings__DefaultConnection"];
 
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
+builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(connectionString));
+builder.Services.AddScoped<ITicketChatApplicationService, TicketChatApplicationService>();
+builder.Services.AddScoped<IChatIntentService, OpenAiChatIntentService>();
+builder.Services.AddScoped<ILlmClient, OpenAiLlmClient>();
+builder.Services.AddScoped<ITicketMetricsQueries, TicketMetricsQueries>();
+builder.Services.AddScoped<ITicketListQueries, TicketListQueries>();
+builder.Services.AddScoped<ChatAnswerFormatter>();
 
 builder.Services.AddCors(options =>
 {
