@@ -30,12 +30,14 @@ builder.Services.AddScoped<ITicketMetricsQueries, TicketMetricsQueries>();
 builder.Services.AddScoped<ITicketListQueries, TicketListQueries>();
 builder.Services.AddScoped<ChatAnswerFormatter>();
 
+var frontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Front", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(frontendUrl)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
