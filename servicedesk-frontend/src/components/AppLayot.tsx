@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   ListChecks,
+  MessageSquareText,
   Settings,
   Ticket,
   ChartColumnBig,
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { label: "All Tickets", to: "/tickets", icon: Ticket },
   { label: "My Tickets", to: "/my-tickets", icon: ListChecks },
   { label: "Analytics", to: "/analytics", icon: ChartColumnBig },
+  { label: "Chat Support", to: "/support/chat", icon: MessageSquareText },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
