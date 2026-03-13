@@ -168,8 +168,8 @@ CREATE TABLE IF NOT EXISTS tickets (
     resolved_at TIMESTAMPTZ,
     last_message_at TIMESTAMPTZ,
 
-    costumer_raiting SMALLINT CHECK (costumer_raiting >= 1 AND costumer_raiting <= 5),
-    costumer_comment TEXT,
+    customer_rating SMALLINT CHECK (customer_rating >= 1 AND customer_rating <= 5),
+    customer_rating_comment TEXT,
 
     CONSTRAINT chk_tickets_customer_agent_different
         CHECK (assigned_agent_id IS NULL OR assigned_agent_id <> customer_id),

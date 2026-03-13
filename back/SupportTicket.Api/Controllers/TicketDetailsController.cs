@@ -354,7 +354,9 @@ public async Task<IActionResult> GetTicketDetails(
                     p.price,
                     COALESCE(p.primary_image_url, '') AS product_image_url,
 
-                    t.subject
+                    t.subject,
+                    t.customer_rating,
+                    COALESCE(t.customer_rating_comment, '') AS customer_rating_comment
                 FROM tickets t
                 INNER JOIN ticket_statuses st ON st.id = t.status_id
                 INNER JOIN ticket_priorities pr ON pr.id = t.priority_id
@@ -391,7 +393,9 @@ public async Task<IActionResult> GetTicketDetails(
                     p.price,
                     COALESCE(p.primary_image_url, '') AS product_image_url,
 
-                    t.subject
+                    t.subject,
+                    t.customer_rating,
+                    COALESCE(t.customer_rating_comment, '') AS customer_rating_comment
                 FROM tickets t
                 INNER JOIN ticket_statuses st ON st.id = t.status_id
                 INNER JOIN ticket_priorities pr ON pr.id = t.priority_id
@@ -451,8 +455,8 @@ public async Task<IActionResult> GetTicketDetails(
 
                     Subject = reader.GetString(17),
 
-                    CustomerRating = null,
-                    CustomerRatingComment = string.Empty
+                    CustomerRating = reader.IsDBNull(18) ? null : (int)reader.GetInt16(18),
+                    CustomerRatingComment = reader.GetString(19)
                 };
             }
         }
@@ -877,15 +881,6 @@ public async Task<IActionResult> GetTicketDetails(
             }
             else
             {
-                /*
-                   IMPORTANT:
-                   This assumes you added these columns:
-                   customer_rating SMALLINT
-                   customer_rating_comment TEXT
-
-                   Without that migration, comment out these 2 fields
-                   and keep only status_id + resolved_at.
-                */
                 const string sql = @"
                     UPDATE tickets
                     SET
@@ -932,10 +927,10 @@ public async Task<IActionResult> GetTicketDetails(
         }
         catch (PostgresException ex) when (ex.SqlState == "42703")
         {
-            _logger.LogError(ex, "Rating columns are missing on tickets table.");
+            _logger.LogError(ex, "Ticket rating schema is out of date.");
             return StatusCode(
                 500,
-                "Rating columns are missing on tickets table. Add customer_rating and customer_rating_comment first.");
+                "Ticket rating schema is out of date. Apply the database schema updates and retry.");
         }
         catch (Exception ex)
         {

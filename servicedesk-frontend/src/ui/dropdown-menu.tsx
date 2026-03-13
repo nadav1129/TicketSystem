@@ -1,11 +1,18 @@
 import {
+  cloneElement,
   createContext,
+  isValidElement,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import type {
+  HTMLAttributes,
+  MouseEvent as ReactMouseEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 import { cn } from "../lib/utils";
 
 type DropdownMenuContextType = {
@@ -46,20 +53,51 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
 type DropdownMenuTriggerProps = {
   children: ReactNode;
   className?: string;
+  asChild?: boolean;
 };
 
 export function DropdownMenuTrigger({
   children,
   className,
+  asChild = false,
 }: DropdownMenuTriggerProps) {
   const context = useContext(DropdownMenuContext);
   if (!context) return null;
 
+  const handleClick = (event?: ReactMouseEvent<HTMLElement>) => {
+    if (event?.defaultPrevented) {
+      return;
+    }
+
+    context.setOpen(!context.open);
+  };
+
+  if (asChild && isValidElement(children)) {
+    const child = children as ReactElement<{
+      className?: string;
+      onClick?: (event: ReactMouseEvent<HTMLElement>) => void;
+      "aria-expanded"?: boolean;
+      "aria-haspopup"?: "menu";
+    }>;
+
+    return cloneElement(child, {
+      className: cn(child.props.className, className),
+      onClick: (event: ReactMouseEvent<HTMLElement>) => {
+        child.props.onClick?.(event);
+        handleClick(event);
+      },
+      "aria-expanded": context.open,
+      "aria-haspopup": "menu",
+    });
+  }
+
   return (
     <button
       type="button"
-      onClick={() => context.setOpen(!context.open)}
+      onClick={(event) => handleClick(event)}
       className={cn(className)}
+      aria-expanded={context.open}
+      aria-haspopup="menu"
     >
       {children}
     </button>

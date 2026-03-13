@@ -1,6 +1,8 @@
-import { MoreHorizontal } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
+
 import { Badge } from "../../ui/badge";
+import { Button } from "../../ui/button";
 import { Checkbox } from "../../ui/checkbox";
 import {
   DropdownMenu,
@@ -8,12 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
-import { Select } from "../../ui/select";
 import type { AnalyticsTicket } from "./analytics.types";
 
 type BuildColumnsArgs = {
-  reviewers: string[];
-  onReviewerChange: (ticketId: number, reviewer: string) => void;
   onOpenTicket: (ticketId: number) => void;
 };
 
@@ -21,15 +20,23 @@ function statusVariant(
   status: string,
 ): "success" | "info" | "danger" | "warning" | "secondary" {
   if (status === "Resolved" || status === "Closed") return "success";
-  if (status === "In Progress") return "info";
-  if (status === "Escalated") return "danger";
+  if (status === "In Progress" || status === "Waiting Customer") return "info";
+  if (status === "Urgent") return "danger";
   if (status === "Open" || status === "New") return "warning";
   return "secondary";
 }
 
+function priorityVariant(
+  priority: string,
+): "success" | "info" | "danger" | "warning" | "secondary" {
+  if (priority === "Urgent") return "danger";
+  if (priority === "High") return "warning";
+  if (priority === "Medium") return "info";
+  if (priority === "Low") return "secondary";
+  return "secondary";
+}
+
 export function buildAnalyticsColumns({
-  reviewers,
-  onReviewerChange,
   onOpenTicket,
 }: BuildColumnsArgs): ColumnDef<AnalyticsTicket>[] {
   return [
@@ -54,19 +61,40 @@ export function buildAnalyticsColumns({
       enableHiding: false,
     },
     {
-      accessorKey: "product",
-      header: "Header",
+      accessorKey: "subject",
+      header: "Ticket",
       cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-zinc-100">{row.original.product}</span>
-          <span className="text-xs text-zinc-500">{row.original.ticketNumber}</span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate font-medium text-zinc-100">{row.original.subject}</span>
+          <span className="truncate text-xs text-zinc-500">
+            {row.original.ticketNumber} · {row.original.product}
+          </span>
         </div>
       ),
     },
     {
-      accessorKey: "sectionType",
-      header: "Section Type",
-      cell: ({ row }) => <Badge variant="outline">{row.original.sectionType}</Badge>,
+      accessorKey: "requester",
+      header: "Requester",
+      cell: ({ row }) => (
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-zinc-100">{row.original.requester}</span>
+          <span className="truncate text-xs text-zinc-500">{row.original.assignedAgent}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "channel",
+      header: "Channel",
+      cell: ({ row }) => <Badge variant="outline">{row.original.channel}</Badge>,
+    },
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      cell: ({ row }) => (
+        <Badge variant={priorityVariant(row.original.priority)}>
+          {row.original.priority}
+        </Badge>
+      ),
     },
     {
       accessorKey: "status",
@@ -78,31 +106,9 @@ export function buildAnalyticsColumns({
       ),
     },
     {
-      accessorKey: "target",
-      header: "Target",
-      cell: ({ row }) => <span className="font-medium text-zinc-100">{row.original.target}</span>,
-    },
-    {
-      accessorKey: "limit",
-      header: "Limit",
-      cell: ({ row }) => <span className="font-medium text-zinc-100">{row.original.limit}</span>,
-    },
-    {
-      accessorKey: "reviewer",
-      header: "Reviewer",
-      cell: ({ row }) => (
-        <Select
-          value={row.original.reviewer}
-          onChange={(event) => onReviewerChange(row.original.rawId, event.target.value)}
-          className="h-8 w-44 text-xs"
-        >
-          {reviewers.map((reviewer) => (
-            <option key={reviewer} value={reviewer}>
-              {reviewer}
-            </option>
-          ))}
-        </Select>
-      ),
+      accessorKey: "date",
+      header: "Created",
+      cell: ({ row }) => <span className="font-medium text-zinc-100">{row.original.date}</span>,
     },
     {
       id: "actions",
@@ -110,15 +116,20 @@ export function buildAnalyticsColumns({
       header: "",
       cell: ({ row }) => (
         <DropdownMenu>
-          <DropdownMenuTrigger className="rounded-md p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100">
-            <MoreHorizontal className="h-4 w-4" />
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-100"
+              aria-label={`Open actions for ${row.original.ticketNumber}`}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => onOpenTicket(row.original.rawId)}>
               Open ticket
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onReviewerChange(row.original.rawId, "Unassigned")}>
-              Clear reviewer
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

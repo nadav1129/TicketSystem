@@ -26,32 +26,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    const int maxRetries = 10;
-    var delay = TimeSpan.FromSeconds(3);
-
-    for (var attempt = 1; attempt <= maxRetries; attempt++)
-    {
-        try
-        {
-            db.Database.EnsureCreated();
-            break;
-        }
-        catch
-        {
-            if (attempt == maxRetries)
-            {
-                throw;
-            }
-
-            Console.WriteLine($"Database not ready. Retry {attempt}/{maxRetries} in {delay.TotalSeconds} seconds...");
-            Thread.Sleep(delay);
-        }
-    }
-}
+await DatabaseSchemaBootstrapper.WaitForDatabaseAndApplyAsync(connectionString, app.Logger);
 
 app.UseCors("Front");
 app.UseAuthorization();

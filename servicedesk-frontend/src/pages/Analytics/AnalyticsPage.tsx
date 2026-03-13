@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Area,
@@ -21,15 +21,24 @@ import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmis
 import { useTheme, type AppTheme } from "../../theme/theme-provider";
 import AnalyticsDataTable from "./AnalyticsDataTable";
 import type { AnalyticsFilterTab, AnalyticsTicket } from "./analytics.types";
+import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/ui/card";
 import { Select } from "@/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs";
 
 type ApiTicket = {
   id: number;
   ticketNumber?: number;
+  subject?: string;
   requesterName: string;
+  assignedAgentName?: string;
   productName: string;
   channel: string;
   priority: string;
@@ -84,22 +93,63 @@ type ChartPalette = {
   tooltipText: string;
 };
 
-const priorityOptions = ["Urgent", "High", "Medium", "Low"];
-const statusOptions = ["Open", "In Progress", "Waiting Customer", "Resolved", "Closed"];
-const channelOptions = ["Web", "Email", "Voice"];
+type BreakdownCardProps = {
+  title: string;
+  description: string;
+  items: { key: string; count: number }[];
+};
 
-const sectionTypeOptions = [
-  "Cover page",
-  "Narrative",
-  "Technical content",
-  "Table of contents",
-];
+const prioritySortOrder: Record<string, number> = {
+  Urgent: 0,
+  High: 1,
+  Medium: 2,
+  Low: 3,
+};
 
-const reviewerPool = [
-  "Eddie Lake",
-  "Jamik Tashpulatov",
-  "Nadi Ibrahim",
-];
+const statusSortOrder: Record<string, number> = {
+  Open: 0,
+  "In Progress": 1,
+  "Waiting Customer": 2,
+  Resolved: 3,
+  Closed: 4,
+};
+
+const channelSortOrder: Record<string, number> = {
+  Web: 0,
+  Email: 1,
+  Voice: 2,
+};
+
+async function buildHttpError(response: Response, fallback: string): Promise<string> {
+  let detail = "";
+
+  try {
+    const text = await response.text();
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as
+          | string
+          | { message?: string; detail?: string; title?: string };
+
+        if (typeof parsed === "string") {
+          detail = parsed;
+        } else {
+          detail =
+            parsed.message ??
+            parsed.detail ??
+            parsed.title ??
+            text;
+        }
+      } catch {
+        detail = text;
+      }
+    }
+  } catch {
+    // Ignore parse/read failures; fallback message is enough.
+  }
+
+  return detail ? `${fallback} (${detail})` : fallback;
+}
 
 function toTitleCase(value: string): string {
   return value
@@ -110,60 +160,85 @@ function toTitleCase(value: string): string {
 }
 
 function normalizePriority(value: string): string {
-  const normalized = toTitleCase(value);
-  if (normalized === "Urgent") return "Urgent";
-  if (normalized === "High") return "High";
-  if (normalized === "Medium") return "Medium";
-  if (normalized === "Low") return "Low";
-  return normalized;
+  return toTitleCase(value);
 }
 
 function normalizeStatus(value: string): string {
-  const normalized = toTitleCase(value);
-  if (normalized === "Inprogress") return "In Progress";
-  if (normalized === "Waitingcustomer") return "Waiting Customer";
-  return normalized;
+  return toTitleCase(value);
 }
 
 function normalizeChannel(value: string): string {
   return toTitleCase(value);
 }
 
-function toAnalyticsTicket(ticket: ApiTicket): AnalyticsTicket {
-  const sectionType = sectionTypeOptions[ticket.id % sectionTypeOptions.length];
-  const target = (ticket.id * 7) % 31 + 1;
-  const limit = (ticket.id * 5) % 27 + 1;
-  const reviewer = reviewerPool[ticket.id % reviewerPool.length];
+function formatDateOnly(value: string): string {
+  const parsed = new Date(value);
 
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+function formatHours(value: number): string {
+  return `${value.toFixed(2)}h`;
+}
+
+function getSelectedDays(chartRange: string): number {
+  if (chartRange === "7d") return 7;
+  if (chartRange === "30d") return 30;
+  return 90;
+}
+
+function getPeriodLabel(days: number): string {
+  if (days === 7) return "last 7 days";
+  if (days === 30) return "last 30 days";
+  return "last 90 days";
+}
+
+function sortOptionValues(values: string[], orderMap: Record<string, number>) {
+  return [...new Set(values.filter(Boolean))].sort((left, right) => {
+    const leftRank = orderMap[left] ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = orderMap[right] ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+
+    return left.localeCompare(right);
+  });
+}
+
+function isResolvedStatus(status: string) {
+  return status === "Resolved" || status === "Closed";
+}
+
+function isInProgressStatus(status: string) {
+  return status === "In Progress" || status === "Waiting Customer";
+}
+
+function isOpenStatus(status: string) {
+  return status === "Open" || isInProgressStatus(status);
+}
+
+function toAnalyticsTicket(ticket: ApiTicket): AnalyticsTicket {
   return {
     rawId: ticket.id,
     ticketNumber: `#${ticket.ticketNumber ?? ticket.id}`,
-    requester: ticket.requesterName,
-    product: ticket.productName,
+    subject: ticket.subject?.trim() || "No subject",
+    requester: ticket.requesterName?.trim() || "Unknown requester",
+    assignedAgent: ticket.assignedAgentName?.trim() || "Unassigned",
+    product: ticket.productName?.trim() || "Unknown product",
     channel: normalizeChannel(ticket.channel),
     priority: normalizePriority(ticket.priority),
     status: normalizeStatus(ticket.status),
-    date: new Date(ticket.createdAt).toISOString().slice(0, 10),
-    sectionType,
-    target,
-    limit,
-    reviewer,
+    date: formatDateOnly(ticket.createdAt),
   };
 }
 
 function getPrioritySortValue(priority: string): number {
-  switch (priority) {
-    case "Urgent":
-      return 0;
-    case "High":
-      return 1;
-    case "Medium":
-      return 2;
-    case "Low":
-      return 3;
-    default:
-      return 999;
-  }
+  return prioritySortOrder[priority] ?? 999;
 }
 
 function getChartPalette(theme: AppTheme): ChartPalette {
@@ -246,6 +321,33 @@ function MetricCard({
   );
 }
 
+function BreakdownCard({ title, description, items }: BreakdownCardProps) {
+  return (
+    <Card className="border-zinc-800/80 bg-zinc-950">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base text-zinc-50">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {items.length === 0 && (
+          <div className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-500">
+            No ticket activity for this period.
+          </div>
+        )}
+        {items.map((item) => (
+          <div
+            key={item.key}
+            className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+          >
+            <span className="text-sm text-zinc-200">{item.key}</span>
+            <Badge variant="secondary">{item.count}</Badge>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AnalyticsPage() {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -262,6 +364,33 @@ export default function AnalyticsPage() {
   const [sortBy, setSortBy] = useState("Newest first");
   const [isTicketPanelOpen, setIsTicketPanelOpen] = useState(false);
   const [chartRange, setChartRange] = useState("90d");
+  const [isChartReady, setIsChartReady] = useState(false);
+
+  const chartHostRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = chartHostRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateSize = () => {
+      const bounds = element.getBoundingClientRect();
+      setIsChartReady(bounds.width > 0 && bounds.height > 0);
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => updateSize());
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const loadPage = async () => {
@@ -269,7 +398,7 @@ export default function AnalyticsPage() {
         setIsLoading(true);
         setError("");
 
-        const days = chartRange === "7d" ? 7 : chartRange === "30d" ? 30 : 90;
+        const days = getSelectedDays(chartRange);
 
         const [ticketsResponse, analyticsResponse] = await Promise.all([
           fetch("/api/tickets"),
@@ -277,11 +406,21 @@ export default function AnalyticsPage() {
         ]);
 
         if (!ticketsResponse.ok) {
-          throw new Error(`Failed to load tickets. Status: ${ticketsResponse.status}`);
+          throw new Error(
+            await buildHttpError(
+              ticketsResponse,
+              `Failed to load tickets. Status: ${ticketsResponse.status}`,
+            ),
+          );
         }
 
         if (!analyticsResponse.ok) {
-          throw new Error(`Failed to load analytics. Status: ${analyticsResponse.status}`);
+          throw new Error(
+            await buildHttpError(
+              analyticsResponse,
+              `Failed to load analytics. Status: ${analyticsResponse.status}`,
+            ),
+          );
         }
 
         const ticketsData: ApiTicket[] = await ticketsResponse.json();
@@ -301,29 +440,44 @@ export default function AnalyticsPage() {
     loadPage();
   }, [chartRange]);
 
+  const priorityOptions = useMemo(
+    () => sortOptionValues(tickets.map((ticket) => ticket.priority), prioritySortOrder),
+    [tickets],
+  );
+  const statusOptions = useMemo(
+    () => sortOptionValues(tickets.map((ticket) => ticket.status), statusSortOrder),
+    [tickets],
+  );
+  const channelOptions = useMemo(
+    () => sortOptionValues(tickets.map((ticket) => ticket.channel), channelSortOrder),
+    [tickets],
+  );
+
   const filteredTickets = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const query = search.trim().toLowerCase();
 
     const filtered = tickets.filter((ticket) => {
       const matchesTab =
         tab === "all" ||
-        (tab === "in-progress" && ticket.status === "In Progress") ||
-        (tab === "done" &&
-          (ticket.status === "Resolved" || ticket.status === "Closed")) ||
-        (tab === "open" && ticket.status === "Open");
+        (tab === "open" && isOpenStatus(ticket.status)) ||
+        (tab === "in-progress" && isInProgressStatus(ticket.status)) ||
+        (tab === "resolved" && isResolvedStatus(ticket.status));
 
       const matchesSearch =
-        q.length === 0 ||
+        query.length === 0 ||
         [
           ticket.ticketNumber,
-          ticket.product,
+          ticket.subject,
           ticket.requester,
-          ticket.reviewer,
-          ticket.sectionType,
+          ticket.assignedAgent,
+          ticket.product,
+          ticket.channel,
+          ticket.priority,
+          ticket.status,
         ]
           .join(" ")
           .toLowerCase()
-          .includes(q);
+          .includes(query);
 
       const matchesPriority =
         priorities.length === 0 || priorities.includes(ticket.priority);
@@ -343,13 +497,14 @@ export default function AnalyticsPage() {
       );
     });
 
-    return [...filtered].sort((a, b) => {
-      if (sortBy === "Newest first") return b.date.localeCompare(a.date);
-      if (sortBy === "Oldest first") return a.date.localeCompare(b.date);
+    return [...filtered].sort((left, right) => {
+      if (sortBy === "Newest first") return right.date.localeCompare(left.date);
+      if (sortBy === "Oldest first") return left.date.localeCompare(right.date);
       if (sortBy === "Priority") {
-        return getPrioritySortValue(a.priority) - getPrioritySortValue(b.priority);
+        return getPrioritySortValue(left.priority) - getPrioritySortValue(right.priority);
       }
-      return a.ticketNumber.localeCompare(b.ticketNumber);
+
+      return left.ticketNumber.localeCompare(right.ticketNumber);
     });
   }, [tickets, tab, search, priorities, statusFilter, channelFilter, sortBy]);
 
@@ -365,6 +520,9 @@ export default function AnalyticsPage() {
   const createdGradientId = `createdGradient-${theme}`;
   const resolvedGradientId = `resolvedGradient-${theme}`;
 
+  const selectedDays = analytics?.days ?? getSelectedDays(chartRange);
+  const periodLabel = getPeriodLabel(selectedDays);
+
   const stats = useMemo(() => {
     if (!analytics) {
       return {
@@ -372,8 +530,8 @@ export default function AnalyticsPage() {
         openTickets: "0",
         resolvedTickets: "0",
         urgentTickets: "0",
-        avgFirstResponse: "0h",
-        avgResolution: "0h",
+        avgFirstResponse: "0.00h",
+        avgResolution: "0.00h",
       };
     }
 
@@ -382,8 +540,8 @@ export default function AnalyticsPage() {
       openTickets: analytics.openTickets.toLocaleString(),
       resolvedTickets: analytics.resolvedTickets.toLocaleString(),
       urgentTickets: analytics.urgentTickets.toLocaleString(),
-      avgFirstResponse: `${analytics.avgFirstResponseHours}h`,
-      avgResolution: `${analytics.avgResolutionHours}h`,
+      avgFirstResponse: formatHours(analytics.avgFirstResponseHours),
+      avgResolution: formatHours(analytics.avgResolutionHours),
     };
   }, [analytics]);
 
@@ -407,18 +565,10 @@ export default function AnalyticsPage() {
     });
   };
 
-  const handleReviewerChange = (ticketId: number, reviewer: string) => {
-    setTickets((current) =>
-      current.map((ticket) =>
-        ticket.rawId === ticketId ? { ...ticket, reviewer } : ticket,
-      ),
-    );
-  };
-
   return (
     <AppLayot
       title="Analytics"
-      subtitle="Live ticket analytics with real KPIs, timeline trends, and the planning table."
+      subtitle="Live ticket analytics backed by the API, with real KPIs, trend lines, and ticket drill-down."
       action={
         <div className="flex flex-wrap items-center gap-2">
           {priorityOptions.map((priority) => (
@@ -481,25 +631,25 @@ export default function AnalyticsPage() {
           <MetricCard
             title="Total Tickets"
             value={stats.totalTickets}
-            hint="All tickets in the system"
+            hint={`Created in the ${periodLabel}`}
             icon={Ticket}
           />
           <MetricCard
             title="Open Tickets"
             value={stats.openTickets}
-            hint="Currently requiring attention"
+            hint={`Still active from the ${periodLabel}`}
             icon={Clock3}
           />
           <MetricCard
             title="Resolved Tickets"
             value={stats.resolvedTickets}
-            hint="Resolved or closed tickets"
+            hint={`Resolved or closed in the ${periodLabel}`}
             icon={CheckCircle2}
           />
           <MetricCard
             title="Urgent Tickets"
             value={stats.urgentTickets}
-            hint="Highest-priority workload"
+            hint={`Urgent tickets created in the ${periodLabel}`}
             icon={AlertTriangle}
           />
         </div>
@@ -546,63 +696,83 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="h-[360px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id={createdGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={chartPalette.createdFill} stopOpacity={0.42} />
-                      <stop offset="100%" stopColor={chartPalette.createdFill} stopOpacity={0.02} />
-                    </linearGradient>
-                    <linearGradient id={resolvedGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={chartPalette.resolvedFill} stopOpacity={0.28} />
-                      <stop offset="100%" stopColor={chartPalette.resolvedFill} stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
+            <div ref={chartHostRef} className="h-[360px] min-h-[360px] w-full min-w-0">
+              {isChartReady && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id={createdGradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={chartPalette.createdFill} stopOpacity={0.42} />
+                        <stop offset="100%" stopColor={chartPalette.createdFill} stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id={resolvedGradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={chartPalette.resolvedFill} stopOpacity={0.28} />
+                        <stop offset="100%" stopColor={chartPalette.resolvedFill} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
 
-                  <CartesianGrid vertical={false} stroke={chartPalette.grid} />
-                  <XAxis
-                    dataKey="label"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: chartPalette.xTick, fontSize: 12 }}
-                    minTickGap={18}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: chartPalette.yTick, fontSize: 12 }}
-                    width={42}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: chartPalette.tooltipBg,
-                      border: `1px solid ${chartPalette.tooltipBorder}`,
-                      borderRadius: 12,
-                      color: chartPalette.tooltipText,
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="created"
-                    name="Created"
-                    stroke={chartPalette.createdStroke}
-                    fill={`url(#${createdGradientId})`}
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="resolved"
-                    name="Resolved"
-                    stroke={chartPalette.resolvedStroke}
-                    fill={`url(#${resolvedGradientId})`}
-                    strokeWidth={1.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+                    <CartesianGrid vertical={false} stroke={chartPalette.grid} />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: chartPalette.xTick, fontSize: 12 }}
+                      minTickGap={18}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: chartPalette.yTick, fontSize: 12 }}
+                      width={42}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: chartPalette.tooltipBg,
+                        border: `1px solid ${chartPalette.tooltipBorder}`,
+                        borderRadius: 12,
+                        color: chartPalette.tooltipText,
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="created"
+                      name="Created"
+                      stroke={chartPalette.createdStroke}
+                      fill={`url(#${createdGradientId})`}
+                      strokeWidth={2}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="resolved"
+                      name="Resolved"
+                      stroke={chartPalette.resolvedStroke}
+                      fill={`url(#${resolvedGradientId})`}
+                      strokeWidth={1.5}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-4 xl:grid-cols-3">
+          <BreakdownCard
+            title="By Status"
+            description={`Tickets created in the ${periodLabel}`}
+            items={analytics?.byStatus ?? []}
+          />
+          <BreakdownCard
+            title="By Priority"
+            description={`Priority mix for the ${periodLabel}`}
+            items={analytics?.byPriority ?? []}
+          />
+          <BreakdownCard
+            title="By Channel"
+            description={`Intake channels for the ${periodLabel}`}
+            items={analytics?.byChannel ?? []}
+          />
+        </div>
 
         <AnalyticsDataTable
           data={filteredTickets}
@@ -613,8 +783,7 @@ export default function AnalyticsPage() {
           search={search}
           onSearchChange={setSearch}
           onOpenTicket={handleOpenTicket}
-          onReviewerChange={handleReviewerChange}
-          onAddSection={() => setIsTicketPanelOpen(true)}
+          onCreateTicket={() => setIsTicketPanelOpen(true)}
         />
       </section>
 

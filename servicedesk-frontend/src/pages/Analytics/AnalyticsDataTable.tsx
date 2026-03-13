@@ -1,16 +1,17 @@
 import {
-  type PaginationState,
-  type RowSelectionState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
+  type RowSelectionState,
+  type SortingState,
+  type VisibilityState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
+import { useMemo, useState } from "react";
+
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import {
@@ -43,16 +44,8 @@ type AnalyticsDataTableProps = {
   search: string;
   onSearchChange: (value: string) => void;
   onOpenTicket: (ticketId: number) => void;
-  onReviewerChange: (ticketId: number, reviewer: string) => void;
-  onAddSection: () => void;
+  onCreateTicket: () => void;
 };
-
-const reviewerOptions = [
-  "Eddie Lake",
-  "Jamik Tashpulatov",
-  "Nadi Ibrahim",
-  "Unassigned",
-];
 
 export default function AnalyticsDataTable({
   data,
@@ -63,8 +56,7 @@ export default function AnalyticsDataTable({
   search,
   onSearchChange,
   onOpenTicket,
-  onReviewerChange,
-  onAddSection,
+  onCreateTicket,
 }: AnalyticsDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -77,11 +69,9 @@ export default function AnalyticsDataTable({
   const columns = useMemo(
     () =>
       buildAnalyticsColumns({
-        reviewers: reviewerOptions,
-        onReviewerChange,
         onOpenTicket,
       }),
-    [onReviewerChange, onOpenTicket],
+    [onOpenTicket],
   );
 
   const table = useReactTable({
@@ -108,10 +98,10 @@ export default function AnalyticsDataTable({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as AnalyticsFilterTab)}>
           <TabsList className="h-8">
-            <TabsTrigger value="all">Outline</TabsTrigger>
-            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-            <TabsTrigger value="done">Done</TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="open">Open</TabsTrigger>
+            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+            <TabsTrigger value="resolved">Resolved</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -119,11 +109,11 @@ export default function AnalyticsDataTable({
           <Input
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search header, requester, reviewer..."
-            className="h-8 w-64 text-xs"
+            placeholder="Search ticket, subject, requester, product..."
+            className="h-8 w-72 text-xs"
           />
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex">
+            <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 text-xs">
                 <Columns3 className="h-3.5 w-3.5" />
                 Customize Columns
@@ -149,9 +139,9 @@ export default function AnalyticsDataTable({
           <Button
             size="sm"
             className="h-8 border-emerald-600 bg-emerald-600 text-zinc-950 hover:bg-emerald-500"
-            onClick={onAddSection}
+            onClick={onCreateTicket}
           >
-            Add Section
+            New Ticket
           </Button>
         </div>
       </div>

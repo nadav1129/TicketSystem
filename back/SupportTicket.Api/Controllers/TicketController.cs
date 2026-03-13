@@ -4,7 +4,7 @@ using Npgsql;
 namespace SupportTicket.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/tickets")]
 public class TicketsController : ControllerBase
 {
     private readonly IConfiguration _configuration;
@@ -40,7 +40,9 @@ public class TicketsController : ControllerBase
     {
         public long Id { get; set; }
         public long TicketNumber { get; set; }
+        public string Subject { get; set; } = string.Empty;
         public string RequesterName { get; set; } = string.Empty;
+        public string AssignedAgentName { get; set; } = string.Empty;
         public string ProductName { get; set; } = string.Empty;
         public string Channel { get; set; } = string.Empty;
         public string Priority { get; set; } = string.Empty;
@@ -86,6 +88,15 @@ public class MyTicketsResponseDto
     public int ResolvedThisMonth { get; set; }
     public string AverageResolution { get; set; } = "—";
     public List<MyTicketsItemDto> Tickets { get; set; } = new();
+}
+
+private static string GetText(NpgsqlDataReader reader, int ordinal, string fallback = "")
+{
+    if (reader.IsDBNull(ordinal))
+        return fallback;
+
+    var value = reader.GetString(ordinal).Trim();
+    return string.IsNullOrWhiteSpace(value) ? fallback : value;
 }
 
 [HttpGet("my-tickets/users")]
@@ -304,49 +315,67 @@ public async Task<IActionResult> GetMyTickets(string viewerType, long userId)
         if (string.IsNullOrWhiteSpace(connectionString))
             return StatusCode(500, "Missing connection string: DefaultConnection");
 
-        await using var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync();
-
-        const string sql = @"
-            SELECT
-                t.id,
-                t.ticket_number,
-                COALESCE(c.full_name, '') AS requester_name,
-                COALESCE(p.name, '') AS product_name,
-                COALESCE(ch.name, ch.code, '') AS channel_name,
-                COALESCE(pr.name, pr.code, '') AS priority_name,
-                COALESCE(st.name, st.code, '') AS status_name,
-                t.created_at
-            FROM tickets t
-            LEFT JOIN users c ON c.id = t.customer_id
-            LEFT JOIN products p ON p.id = t.product_id
-            LEFT JOIN ticket_channels ch ON ch.id = t.channel_id
-            LEFT JOIN ticket_priorities pr ON pr.id = t.priority_id
-            LEFT JOIN ticket_statuses st ON st.id = t.status_id
-            ORDER BY t.created_at DESC, t.id DESC;
-        ";
-
-        var tickets = new List<TicketListItemResponse>();
-
-        await using var cmd = new NpgsqlCommand(sql, connection);
-        await using var reader = await cmd.ExecuteReaderAsync();
-
-        while (await reader.ReadAsync())
+        try
         {
-            tickets.Add(new TicketListItemResponse
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            const string sql = @"
+                SELECT
+                    t.id,
+                    t.ticket_number,
+                    COALESCE(NULLIF(TRIM(t.subject), ''), '(No subject)') AS subject,
+                    COALESCE(NULLIF(TRIM(c.full_name), ''), 'Unknown requester') AS requester_name,
+                    COALESCE(NULLIF(TRIM(a.full_name), ''), 'Unassigned') AS assigned_agent_name,
+                    COALESCE(NULLIF(TRIM(p.name), ''), 'Unknown product') AS product_name,
+                    COALESCE(NULLIF(TRIM(ch.name), ''), INITCAP(REPLACE(COALESCE(ch.code, 'unknown'), '_', ' '))) AS channel_name,
+                    COALESCE(NULLIF(TRIM(pr.name), ''), INITCAP(REPLACE(COALESCE(pr.code, 'unknown'), '_', ' '))) AS priority_name,
+                    COALESCE(NULLIF(TRIM(st.name), ''), INITCAP(REPLACE(COALESCE(st.code, 'unknown'), '_', ' '))) AS status_name,
+                    t.created_at
+                FROM tickets t
+                LEFT JOIN users c ON c.id = t.customer_id
+                LEFT JOIN users a ON a.id = t.assigned_agent_id
+                LEFT JOIN products p ON p.id = t.product_id
+                LEFT JOIN ticket_channels ch ON ch.id = t.channel_id
+                LEFT JOIN ticket_priorities pr ON pr.id = t.priority_id
+                LEFT JOIN ticket_statuses st ON st.id = t.status_id
+                ORDER BY t.created_at DESC, t.id DESC;
+            ";
+
+            var tickets = new List<TicketListItemResponse>();
+
+            await using var cmd = new NpgsqlCommand(sql, connection);
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                Id = reader.GetInt64(0),
-                TicketNumber = reader.GetInt64(1),
-                RequesterName = reader.GetString(2),
-                ProductName = reader.GetString(3),
-                Channel = reader.GetString(4),
-                Priority = reader.GetString(5),
-                Status = reader.GetString(6),
-                CreatedAt = reader.GetFieldValue<DateTime>(7)
+                tickets.Add(new TicketListItemResponse
+                {
+                    Id = reader.GetInt64(0),
+                    TicketNumber = reader.GetInt64(1),
+                    Subject = GetText(reader, 2, "(No subject)"),
+                    RequesterName = GetText(reader, 3, "Unknown requester"),
+                    AssignedAgentName = GetText(reader, 4, "Unassigned"),
+                    ProductName = GetText(reader, 5, "Unknown product"),
+                    Channel = GetText(reader, 6, "Unknown"),
+                    Priority = GetText(reader, 7, "Unknown"),
+                    Status = GetText(reader, 8, "Unknown"),
+                    CreatedAt = reader.GetFieldValue<DateTime>(9)
+                });
+            }
+
+            return Ok(tickets);
+        }
+        catch (PostgresException ex)
+        {
+            _logger.LogError(ex, "Failed to load ticket list. SQLSTATE: {SqlState}", ex.SqlState);
+            return StatusCode(500, new
+            {
+                message = "Ticket list query failed.",
+                sqlState = ex.SqlState,
+                detail = ex.MessageText
             });
         }
-
-        return Ok(tickets);
     }
 
     [HttpPost]
