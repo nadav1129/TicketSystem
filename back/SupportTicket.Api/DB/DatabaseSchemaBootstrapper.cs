@@ -22,7 +22,8 @@ public static class DatabaseSchemaBootstrapper
                 await using var connection = new NpgsqlConnection(connectionString);
                 await connection.OpenAsync(cancellationToken);
 
-                await EnsureTicketRatingColumnsAsync(connection, cancellationToken);
+                await ExecuteSqlFileAsync(connection, "/src/DB/Scripts/001_init.sql", cancellationToken);
+                await ExecuteSqlFileAsync(connection, "/src/DB/Scripts/002_fix_ticket_rating_columns.sql", cancellationToken);
 
                 logger.LogInformation("Database connection verified and schema compatibility updates were applied.");
                 return;
@@ -42,6 +43,20 @@ public static class DatabaseSchemaBootstrapper
 
         throw new InvalidOperationException("Database was not ready after the configured retry window.");
     }
+
+    private static async Task ExecuteSqlFileAsync(
+    NpgsqlConnection connection,
+    string path,
+    CancellationToken cancellationToken)
+{
+    if (!File.Exists(path))
+        throw new FileNotFoundException($"SQL script not found: {path}");
+
+    var sql = await File.ReadAllTextAsync(path, cancellationToken);
+
+    await using var cmd = new NpgsqlCommand(sql, connection);
+    await cmd.ExecuteNonQueryAsync(cancellationToken);
+}
 
     private static async Task EnsureTicketRatingColumnsAsync(
         NpgsqlConnection connection,
