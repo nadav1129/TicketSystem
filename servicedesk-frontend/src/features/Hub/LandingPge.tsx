@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Clock3,
   ExternalLink,
-  FileText,
   HelpCircle,
   LifeBuoy,
   LogOut,
@@ -38,7 +37,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-type ServiceId = "tickets" | "docs" | "manuals"
+type ServiceId = "tickets" | "manuals"
 type CalendarView = "daily" | "weekly"
 
 type ServiceDefinition = {
@@ -56,15 +55,11 @@ type ServiceDefinition = {
 const APP_CONFIG = {
   landingTitle: "Agilite Hub",
   ticketSystemUrl: import.meta.env.VITE_TICKET_SYSTEM_URL ?? "/dashboard",
-  docsUrl:
-    import.meta.env.VITE_GITBOOK_DOCS_URL ??
-    "https://example.gitbook.io/agilite-docs",
-  manualsUrl:
-    import.meta.env.VITE_GITBOOK_MANUALS_URL ??
-    "https://example.gitbook.io/agilite-manuals",
+  manualSiteUrl: "https://nadav-1.gitbook.io/agilite",
+  ticketSystemHelpUrl:
+    "https://nadav-1.gitbook.io/agilite/documentation/ticket-system/system-overview",
   helpFallbackUrl:
-    import.meta.env.VITE_GITBOOK_HELP_FALLBACK_URL ??
-    "https://example.gitbook.io/agilite-help",
+    "https://nadav-1.gitbook.io/agilite/documentation",
   userName: import.meta.env.VITE_HUB_USER_NAME ?? "Nadav Hadar",
   tutorialStorageKey: "agilite-hub-tutorial-seen",
 } as const
@@ -126,27 +121,16 @@ const services: ServiceDefinition[] = [
     accent: "from-cyan-400/26 via-sky-400/14 to-transparent",
     badge: "Core",
     appUrl: APP_CONFIG.ticketSystemUrl,
-    helpUrl: APP_CONFIG.helpFallbackUrl,
-  },
-  {
-    id: "docs",
-    name: "Documentation",
-    subtitle: "Architecture, API, setup",
-    icon: FileText,
-    accent: "from-violet-400/26 via-fuchsia-400/14 to-transparent",
-    badge: "Docs",
-    appUrl: APP_CONFIG.docsUrl,
-    helpUrl: APP_CONFIG.helpFallbackUrl,
-    openInNewTab: true,
+    helpUrl: APP_CONFIG.ticketSystemHelpUrl,
   },
   {
     id: "manuals",
     name: "Manual Site",
-    subtitle: "Guides, flows, training",
+    subtitle: "Agilite Knowledge Platform",
     icon: BookOpen,
     accent: "from-emerald-400/26 via-teal-400/14 to-transparent",
     badge: "Guide",
-    appUrl: APP_CONFIG.manualsUrl,
+    appUrl: APP_CONFIG.manualSiteUrl,
     helpUrl: APP_CONFIG.helpFallbackUrl,
     openInNewTab: true,
   },
@@ -385,7 +369,7 @@ function TutorialOverlay({
                   <Dialog.Description asChild>
                     <CardDescription className="mt-1 max-w-2xl text-sm leading-6 text-white/55">
                       Landing page for Render deployment, with direct links to the
-                      live ticket system and GitBook spaces.
+                      live ticket system and the Agilite Knowledge Platform.
                     </CardDescription>
                   </Dialog.Description>
                 </div>
@@ -404,11 +388,11 @@ function TutorialOverlay({
               {[
                 {
                   title: "Open apps",
-                  text: "The Ticket System opens the real app route. Documentation and Manual Site open GitBook links.",
+                  text: "The Ticket System opens the real app route. Manual Site opens the Agilite Knowledge Platform in GitBook.",
                 },
                 {
                   title: "Help is ready",
-                  text: "Every right-click Help action points to a configurable GitBook URL so you can wire exact pages later.",
+                  text: "Ticket System Help opens the system overview page, and Manual Site Help opens the documentation root.",
                 },
                 {
                   title: "First-visit tutorial",
@@ -438,7 +422,7 @@ function TutorialOverlay({
             <CardFooter className="justify-between border-white/8 bg-black/12 px-5 py-4">
               <div className="flex items-center gap-2 text-sm text-white/55">
                 <Check className="size-4 text-emerald-300" />
-                Ready for smooth Render + GitBook integration
+                Ready for smooth Render + GitBook navigation
               </div>
 
               <Button
@@ -508,10 +492,7 @@ export default function AgiliteHubKiosk() {
   return (
     <Tooltip.Provider>
       <TutorialOverlay open={tutorialOpen} setOpen={setTutorialOpen} />
-
-      <ContextMenu.Root>
-        <ContextMenu.Trigger asChild>
-          <div className="min-h-screen bg-[#08101c] text-white">
+      <div className="min-h-screen bg-[#08101c] text-white">
             <div className="relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.14),transparent_26%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_20%),radial-gradient(circle_at_bottom,rgba(20,184,166,0.08),transparent_22%)]" />
               <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:56px_56px] opacity-[0.035]" />
@@ -542,7 +523,7 @@ export default function AgiliteHubKiosk() {
                           <div className="max-w-2xl space-y-2.5">
                             <p className="text-sm leading-6 text-white/64 md:text-[15px]">
                               This is the landing page for the hosted project. It routes visitors into the live ticket system
-                              and out to GitBook spaces for documentation and manuals.
+                              and out to the Agilite Knowledge Platform manual site.
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-white/54">
                               <Badge className={pillClass()}>Render Landing</Badge>
@@ -556,7 +537,7 @@ export default function AgiliteHubKiosk() {
                           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/18 px-3 py-2 backdrop-blur-md">
                             <Search className="size-3.5 text-white/42" />
                             <span className="text-xs text-white/50">
-                              Search services, docs, tools
+                              Search services, manuals, tools
                             </span>
                           </div>
 
@@ -689,7 +670,7 @@ export default function AgiliteHubKiosk() {
                             Workspace services
                           </h2>
                           <p className="mt-1.5 text-[11px] leading-5 text-white/54 md:text-xs">
-                            Ticket System opens the live site. Documentation and Manual Site open GitBook directly.
+                            Ticket System opens the live site. Manual Site opens the Agilite Knowledge Platform.
                           </p>
                         </div>
 
@@ -786,25 +767,11 @@ export default function AgiliteHubKiosk() {
                         >
                           <CardContent className="p-3">
                             <div className="flex items-center gap-2 text-sm font-medium text-white">
-                              <FileText className="size-4" />
-                              Documentation
-                            </div>
-                            <div className="mt-1 text-xs leading-5 text-white/52">
-                              Uses VITE_GITBOOK_DOCS_URL and opens GitBook in a new tab.
-                            </div>
-                          </CardContent>
-                        </GlassPanel>
-                        <GlassPanel
-                          size="sm"
-                          className="rounded-[18px] bg-black/18 shadow-none"
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-2 text-sm font-medium text-white">
                               <BookOpen className="size-4" />
                               Manual Site
                             </div>
                             <div className="mt-1 text-xs leading-5 text-white/52">
-                              Uses VITE_GITBOOK_MANUALS_URL and right-click Help uses the configurable GitBook fallback.
+                              Opens the Agilite Knowledge Platform in a new tab, and Help goes to the documentation root.
                             </div>
                           </CardContent>
                         </GlassPanel>
@@ -814,32 +781,11 @@ export default function AgiliteHubKiosk() {
                 </main>
               </div>
             </div>
-          </div>
-        </ContextMenu.Trigger>
-
-        <ContextMenu.Portal>
-          <ContextMenu.Content className="z-50 min-w-[190px] overflow-hidden rounded-2xl border border-white/10 bg-[#11192a]/88 p-1 text-white shadow-2xl backdrop-blur-xl">
-            <ContextMenu.Item
-              onSelect={handleOpenHub}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm outline-none transition hover:bg-white/10"
-            >
-              <ChevronRight className="size-4" />
-              Open hub
-            </ContextMenu.Item>
-            <ContextMenu.Item
-              onSelect={handleOpenHubHelp}
-              className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm outline-none transition hover:bg-white/10"
-            >
-              <HelpCircle className="size-4" />
-              Help
-            </ContextMenu.Item>
-          </ContextMenu.Content>
-        </ContextMenu.Portal>
-      </ContextMenu.Root>
+      </div>
 
       <div className="pointer-events-none fixed bottom-4 right-4 hidden rounded-full border border-white/10 bg-[#111827]/58 px-3 py-1.5 text-[11px] text-white/55 shadow-xl backdrop-blur-xl lg:flex lg:items-center lg:gap-2">
         <ExternalLink className="size-3.5" />
-        URLs are environment-driven for Render deployment
+        Ticket System stays local, manuals and help open GitBook
       </div>
     </Tooltip.Provider>
   )

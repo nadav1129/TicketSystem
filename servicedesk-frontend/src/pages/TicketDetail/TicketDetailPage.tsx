@@ -139,7 +139,11 @@ export default function TicketDetailsPage() {
   const [ratingComment, setRatingComment] = useState("");
 
   const backPath =
-    routeState.source === "my-tickets" ? "/my-tickets" : "/tickets";
+    routeState.source === "my-tickets"
+      ? "/my-tickets"
+      : routeState.source === "dashboard"
+        ? "/dashboard"
+        : "/tickets";
 
   const loadTicket = async () => {
     if (!Number.isFinite(numericTicketId) || numericTicketId <= 0) {

@@ -264,7 +264,7 @@ export default function DashboardPage() {
   }, []);
 
   const openTicket = (ticketId: number) => {
-    navigate(`http://localhost:8080/agent/tickets/${ticketId}`, {
+    navigate(`/agent/tickets/${ticketId}`, {
       state: {
         allowReply: false,
         source: "dashboard",
