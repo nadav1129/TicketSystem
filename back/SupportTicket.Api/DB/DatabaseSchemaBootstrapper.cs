@@ -22,8 +22,11 @@ public static class DatabaseSchemaBootstrapper
                 await using var connection = new NpgsqlConnection(connectionString);
                 await connection.OpenAsync(cancellationToken);
 
-                await ExecuteSqlFileAsync(connection, "/src/DB/Scripts/001_init.sql", cancellationToken);
-                await ExecuteSqlFileAsync(connection, "/src/DB/Scripts/002_fix_ticket_rating_columns.sql", cancellationToken);
+                var initScriptPath = Path.Combine(AppContext.BaseDirectory, "DB", "Scripts", "001_init.sql");
+                var fixScriptPath = Path.Combine(AppContext.BaseDirectory, "DB", "Scripts", "002_fix_ticket_rating_columns.sql");
+
+                await ExecuteSqlFileAsync(connection, initScriptPath, cancellationToken);
+                await ExecuteSqlFileAsync(connection, fixScriptPath, cancellationToken);
 
                 logger.LogInformation("Database connection verified and schema compatibility updates were applied.");
                 return;
