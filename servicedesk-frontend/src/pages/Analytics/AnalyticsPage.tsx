@@ -322,25 +322,61 @@ function MetricCard({
 }
 
 function BreakdownCard({ title, description, items }: BreakdownCardProps) {
+  const { theme } = useTheme();
+  const isLightTheme = theme === "light";
+
   return (
-    <Card className="border-zinc-800/80 bg-zinc-950">
+    <Card
+      className={
+        isLightTheme
+          ? "border-[#cad5cc] bg-[#f4f7f4] shadow-[0_18px_36px_rgba(122,142,127,0.10)]"
+          : "border-zinc-800/80 bg-zinc-950"
+      }
+    >
       <CardHeader className="pb-3">
-        <CardTitle className="text-base text-zinc-50">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle
+          className={isLightTheme ? "text-base text-[#1e2a21]" : "text-base text-zinc-50"}
+        >
+          {title}
+        </CardTitle>
+        <CardDescription className={isLightTheme ? "text-[#657467]" : undefined}>
+          {description}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {items.length === 0 && (
-          <div className="rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-500">
+          <div
+            className={
+              isLightTheme
+                ? "rounded-md border border-[#bdcabf] bg-[#dde5de] px-3 py-2 text-sm text-[#516052]"
+                : "rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-500"
+            }
+          >
             No ticket activity for this period.
           </div>
         )}
         {items.map((item) => (
           <div
             key={item.key}
-            className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+            className={
+              isLightTheme
+                ? "flex items-center justify-between rounded-md border border-[#667266] bg-[#778477] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                : "flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-2"
+            }
           >
-            <span className="text-sm text-zinc-200">{item.key}</span>
-            <Badge variant="secondary">{item.count}</Badge>
+            <span className={isLightTheme ? "text-sm text-[#102216]" : "text-sm text-zinc-200"}>
+              {item.key}
+            </span>
+            <Badge
+              variant="secondary"
+              className={
+                isLightTheme
+                  ? "border border-[#edf3ee] bg-[#f8fbf8] text-[#263328] shadow-none"
+                  : undefined
+              }
+            >
+              {item.count}
+            </Badge>
           </div>
         ))}
       </CardContent>

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { useTheme } from "../../theme/theme-provider";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
@@ -49,7 +50,19 @@ function getCurrentTimeLabel() {
   });
 }
 
-function getMessageContainerClass(role: MessageRole) {
+function getMessageContainerClass(role: MessageRole, isLightTheme: boolean) {
+  if (isLightTheme) {
+    if (role === "assistant") {
+      return "border-emerald-200 bg-emerald-50";
+    }
+
+    if (role === "system") {
+      return "border-[#cad5cc] bg-[#edf2ed]";
+    }
+
+    return "border-[#c4d1c6] bg-[#d9e4db]";
+  }
+
   if (role === "assistant") {
     return "border-emerald-500/20 bg-emerald-500/10";
   }
@@ -90,6 +103,8 @@ async function askChat(question: string): Promise<ChatAskResponse> {
 }
 
 export default function ChatSupportPage() {
+  const { theme } = useTheme();
+  const isLightTheme = theme === "light";
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTicketPanelOpen, setIsTicketPanelOpen] = useState(false);
@@ -109,6 +124,75 @@ export default function ChatSupportPage() {
     { label: "Avg. reply", value: "API based", icon: Clock3 },
     { label: "Messages", value: String(messages.length), icon: MessageSquareText },
   ];
+
+  const topStatusBadgeClass = isLightTheme
+    ? "rounded-full border border-[#bdd0c0] bg-[#dce8de] px-3 py-1 text-[#2a3a2d]"
+    : "rounded-full px-3 py-1";
+  const workspaceBadgeClass = isLightTheme
+    ? "rounded-full border border-[#c3d2c6] bg-[#dfe9e1] px-3 py-1 text-xs text-[#314033]"
+    : "rounded-full px-3 py-1 text-xs";
+  const onlineBadgeClass = isLightTheme
+    ? "rounded-full border border-[#b9d9c7] bg-[#e0f1e8] px-3 py-1 text-xs text-[#1d6b45]"
+    : "rounded-full px-3 py-1 text-xs";
+  const outlineButtonClass = isLightTheme
+    ? "rounded-2xl border-[#bfd0c2] bg-[#f7faf7] text-[#1d2a20] hover:bg-[#edf3ee]"
+    : "rounded-2xl";
+  const primaryButtonClass = isLightTheme
+    ? "rounded-2xl border-[#6d7d71] bg-[#6f7f73] text-white hover:bg-[#647266]"
+    : "rounded-2xl";
+  const statCardClass = isLightTheme
+    ? "rounded-3xl border-[#cad7cf] bg-[#f7faf7]/95 text-slate-900 shadow-[0_16px_36px_rgba(124,145,130,0.10)]"
+    : "rounded-3xl border-slate-700 bg-slate-800/80 text-slate-50";
+  const statLabelClass = isLightTheme
+    ? "mb-3 flex items-center gap-2 text-sm text-[#667566]"
+    : "mb-3 flex items-center gap-2 text-sm text-slate-300";
+  const shellCardClass = isLightTheme
+    ? "overflow-hidden rounded-3xl border-[#cad7cf] bg-[#eef4ef]/95 text-slate-900 shadow-[0_18px_42px_rgba(124,145,130,0.12)]"
+    : "overflow-hidden rounded-3xl border-slate-700 bg-slate-800/95 text-slate-50 shadow-sm";
+  const shellHeaderClass = isLightTheme
+    ? "border-b border-[#cad7cf] bg-[#e8efe9] px-6 py-5"
+    : "border-b border-slate-700 bg-slate-800 px-6 py-5";
+  const shellDescriptionClass = isLightTheme
+    ? "max-w-2xl text-[#617062]"
+    : "max-w-2xl text-slate-300";
+  const transcriptAreaClass = isLightTheme
+    ? "h-[560px] overflow-y-auto bg-[#f8fbf8] px-6 py-6"
+    : "h-[560px] overflow-y-auto px-6 py-6";
+  const botAvatarClass = isLightTheme
+    ? "mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-[#c9d4cb] bg-[#eff4ef]"
+    : "mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900";
+  const userAvatarClass = isLightTheme
+    ? "mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-[#c3d0c5] bg-[#dce6dd] text-[#203025]"
+    : "mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-100 text-zinc-900";
+  const composerShellClass = isLightTheme
+    ? "border-t border-[#cad7cf] bg-[#e8efe9] px-6 py-5"
+    : "border-t border-slate-700 bg-slate-800/90 px-6 py-5";
+  const composerPanelClass = isLightTheme
+    ? "rounded-3xl border border-[#c7d4c9] bg-[#f8fbf8] p-3 shadow-[0_12px_28px_rgba(128,147,132,0.10)]"
+    : "rounded-3xl border border-slate-700 bg-zinc-950/95 p-3";
+  const textareaClass = isLightTheme
+    ? "min-h-[112px] resize-none border-0 bg-transparent px-1 py-1 text-[#152117] placeholder:text-[#70806f] shadow-none focus-visible:ring-0 disabled:opacity-60"
+    : "min-h-[112px] resize-none border-0 bg-transparent px-1 py-1 text-zinc-100 shadow-none focus-visible:ring-0 disabled:opacity-60";
+  const composerDividerClass = isLightTheme
+    ? "mt-3 flex flex-col gap-3 border-t border-[#d5ded6] pt-3 sm:flex-row sm:items-center sm:justify-between"
+    : "mt-3 flex flex-col gap-3 border-t border-zinc-800 pt-3 sm:flex-row sm:items-center sm:justify-between";
+  const ghostIconButtonClass = isLightTheme
+    ? "rounded-2xl border border-transparent text-[#5c6b5d] hover:bg-[#ebf1ec]"
+    : "rounded-2xl";
+  const knowledgeInputClass = isLightTheme
+    ? "h-9 max-w-xs rounded-2xl border-[#c7d4c9] bg-[#e5ece6] text-xs text-[#5d6b5d]"
+    : "h-9 max-w-xs rounded-2xl border-zinc-700 bg-zinc-950 text-xs text-zinc-400";
+  const thinkingBubbleClass = isLightTheme
+    ? "max-w-[82%] rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm"
+    : "max-w-[82%] rounded-3xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 shadow-sm";
+  const messageTextClass = isLightTheme
+    ? "text-sm leading-6 text-[#1d2a20]"
+    : "text-sm leading-6 text-zinc-200";
+  const messageMetaClass = isLightTheme ? "text-xs text-[#6a786a]" : "text-xs text-zinc-400";
+  const iconTintClass = isLightTheme ? "h-4 w-4 text-emerald-600" : "h-4 w-4 text-emerald-300";
+  const sendingRowTextClass = isLightTheme
+    ? "flex items-center gap-2 text-sm text-[#1d2a20]"
+    : "flex items-center gap-2 text-sm text-zinc-200";
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -180,17 +264,17 @@ export default function ChatSupportPage() {
       subtitle="AI-assisted customer conversations with quick triage, context panels, and ticket conversion."
       action={
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="success" className="rounded-full px-3 py-1">
+          <Badge variant="success" className={topStatusBadgeClass}>
             {isSending ? "Waiting for reply" : "Live assistant"}
           </Badge>
           <Button
             variant="outline"
             onClick={() => setIsTicketPanelOpen(true)}
-            className="rounded-2xl"
+            className={outlineButtonClass}
           >
             Create ticket
           </Button>
-          <Button className="rounded-2xl">
+          <Button className={primaryButtonClass}>
             Escalate to agent
           </Button>
         </div>
@@ -202,9 +286,9 @@ export default function ChatSupportPage() {
             const Icon = item.icon;
 
             return (
-              <Card key={item.label} className="rounded-3xl border-slate-200">
+              <Card key={item.label} className={statCardClass}>
                 <CardContent className="p-5 pt-5">
-                  <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
+                  <div className={statLabelClass}>
                     <Icon className="h-4 w-4" />
                     <span>{item.label}</span>
                   </div>
@@ -218,32 +302,32 @@ export default function ChatSupportPage() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.65fr_0.75fr]">
-          <Card className="overflow-hidden rounded-3xl border-slate-200 shadow-sm">
-            <CardHeader className="border-b border-slate-200 bg-slate-50/40 px-6 py-5">
+          <Card className={shellCardClass}>
+            <CardHeader className={shellHeaderClass}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                    <Badge variant="secondary" className={workspaceBadgeClass}>
                       AI Support Workspace
                     </Badge>
-                    <Badge variant="info" className="rounded-full px-3 py-1 text-xs">
+                    <Badge variant="info" className={onlineBadgeClass}>
                       {isSending ? "Busy" : "Online"}
                     </Badge>
                   </div>
                   <CardTitle className="text-2xl font-semibold tracking-tight">
                     Customer conversation
                   </CardTitle>
-                  <CardDescription className="max-w-2xl">
+                  <CardDescription className={shellDescriptionClass}>
                     A focused support screen for guided troubleshooting, customer context,
                     and backend-driven model responses.
                   </CardDescription>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" className="rounded-2xl">
+                  <Button variant="outline" className={outlineButtonClass}>
                     Save summary
                   </Button>
-                  <Button className="rounded-2xl">
+                  <Button className={primaryButtonClass}>
                     Share with agent
                   </Button>
                 </div>
@@ -252,7 +336,7 @@ export default function ChatSupportPage() {
 
             <CardContent className="p-0">
               <div className="grid min-h-[720px] grid-rows-[1fr_auto]">
-                <div className="h-[560px] overflow-y-auto px-6 py-6">
+                <div className={transcriptAreaClass}>
                   <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
                     {messages.map((message) => {
                       const isUser = message.role === "user";
@@ -264,29 +348,37 @@ export default function ChatSupportPage() {
                           className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}
                         >
                           {!isUser && (
-                            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900">
+                            <div className={botAvatarClass}>
                               {isSystem ? (
-                                <span className="text-xs font-semibold text-zinc-300">S</span>
+                                <span
+                                  className={
+                                    isLightTheme
+                                      ? "text-xs font-semibold text-[#506050]"
+                                      : "text-xs font-semibold text-zinc-300"
+                                  }
+                                >
+                                  S
+                                </span>
                               ) : (
-                                <Bot className="h-4 w-4 text-emerald-300" />
+                                <Bot className={iconTintClass} />
                               )}
                             </div>
                           )}
 
                           <div
-                            className={`max-w-[82%] rounded-3xl border px-4 py-3 shadow-sm ${getMessageContainerClass(message.role)}`}
+                            className={`max-w-[82%] rounded-3xl border px-4 py-3 shadow-sm ${getMessageContainerClass(message.role, isLightTheme)}`}
                           >
                             <div className="mb-2 flex items-center gap-2">
                               <span className="text-sm font-medium">{message.author}</span>
-                              <span className="text-xs text-zinc-400">{message.time}</span>
+                              <span className={messageMetaClass}>{message.time}</span>
                             </div>
-                            <p className="text-sm leading-6 text-zinc-200">
+                            <p className={messageTextClass}>
                               {message.text}
                             </p>
                           </div>
 
                           {isUser && (
-                            <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-100 text-zinc-900">
+                            <div className={userAvatarClass}>
                               <User className="h-4 w-4" />
                             </div>
                           )}
@@ -296,16 +388,16 @@ export default function ChatSupportPage() {
 
                     {isSending && (
                       <div className="flex gap-3 justify-start">
-                        <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900">
-                          <Bot className="h-4 w-4 text-emerald-300" />
+                        <div className={botAvatarClass}>
+                          <Bot className={iconTintClass} />
                         </div>
 
-                        <div className="max-w-[82%] rounded-3xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 shadow-sm">
+                        <div className={thinkingBubbleClass}>
                           <div className="mb-2 flex items-center gap-2">
                             <span className="text-sm font-medium">Agilite Support AI</span>
-                            <span className="text-xs text-zinc-400">{getCurrentTimeLabel()}</span>
+                            <span className={messageMetaClass}>{getCurrentTimeLabel()}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-zinc-200">
+                          <div className={sendingRowTextClass}>
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Thinking...
                           </div>
@@ -317,33 +409,38 @@ export default function ChatSupportPage() {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-200 bg-slate-50/30 px-6 py-5">
+                <div className={composerShellClass}>
                   <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-                    <div className="rounded-3xl border border-slate-200 bg-zinc-900 p-3">
+                    <div className={composerPanelClass}>
                       <Textarea
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
                         onKeyDown={handleComposerKeyDown}
                         placeholder="Write a support message..."
                         disabled={isSending}
-                        className="min-h-[112px] resize-none border-0 bg-transparent px-1 py-1 text-zinc-100 shadow-none focus-visible:ring-0 disabled:opacity-60"
+                        className={textareaClass}
                       />
 
-                      <div className="mt-3 flex flex-col gap-3 border-t border-zinc-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className={composerDividerClass}>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="rounded-2xl" disabled={isSending}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={ghostIconButtonClass}
+                            disabled={isSending}
+                          >
                             <Paperclip className="h-4 w-4" />
                           </Button>
                           <Input
                             value="Knowledge base + product context enabled"
                             readOnly
-                            className="h-9 max-w-xs rounded-2xl border-zinc-700 bg-zinc-950 text-xs text-zinc-400"
+                            className={knowledgeInputClass}
                           />
                         </div>
 
                         <Button
                           onClick={() => void handleSend()}
-                          className="rounded-2xl px-5"
+                          className={`${primaryButtonClass} px-5`}
                           disabled={isSending}
                         >
                           {isSending ? (
