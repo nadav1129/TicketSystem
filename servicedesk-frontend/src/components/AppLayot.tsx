@@ -7,7 +7,7 @@ import {
   ChartColumnBig,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { cn } from "../lib/utils";
 
 type AppLayoutProps = {
@@ -37,15 +37,18 @@ export default function AppLayout({ title, subtitle, action, children }: AppLayo
       <div className="flex min-h-screen">
         <aside className="hidden w-72 shrink-0 border-r border-zinc-800 bg-zinc-900 lg:block">
           <div className="flex h-24 items-center border-b border-zinc-800 px-6">
-            <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="flex items-center gap-3 rounded-md transition hover:opacity-90"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-md border border-emerald-500/40 bg-zinc-900 text-zinc-100">
                 <ScorpionMark />
               </div>
               <div>
-                <div className="text-lg font-semibold tracking-tight text-zinc-100">ServiceDesk</div>
+                <div className="text-lg font-semibold tracking-tight text-zinc-100">TicketSystem</div>
                 <div className="text-xs text-zinc-500">Prestige Control Center</div>
               </div>
-            </div>
+            </Link>
           </div>
 
           <nav className="space-y-2 px-4 py-4">
@@ -76,6 +79,18 @@ export default function AppLayout({ title, subtitle, action, children }: AppLayo
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex min-h-24 items-center border-b border-zinc-800 bg-zinc-950 px-6 py-3">
             <div className="flex w-full flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <Link
+                to="/"
+                className="flex items-center gap-3 rounded-md lg:hidden"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border border-emerald-500/40 bg-zinc-900 text-zinc-100">
+                  <ScorpionMark />
+                </div>
+                <div>
+                  <div className="text-base font-semibold tracking-tight text-zinc-100">TicketSystem</div>
+                  <div className="text-xs text-zinc-500">Prestige Control Center</div>
+                </div>
+              </Link>
               <div className="min-w-0">
                 <h1 className="text-3xl font-semibold tracking-tight text-zinc-100">{title}</h1>
                 {subtitle ? <p className="mt-1 text-sm text-zinc-500">{subtitle}</p> : null}
