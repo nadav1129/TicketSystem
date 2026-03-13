@@ -401,8 +401,8 @@ export default function AnalyticsPage() {
         const days = getSelectedDays(chartRange);
 
         const [ticketsResponse, analyticsResponse] = await Promise.all([
-          fetch("/api/tickets"),
-          fetch(`/api/analytics/tickets?days=${days}`),
+          fetch("http://localhost:8080/api/tickets"),
+          fetch(`http://localhost:8080/api/analytics/tickets?days=${days}`),
         ]);
 
         if (!ticketsResponse.ok) {

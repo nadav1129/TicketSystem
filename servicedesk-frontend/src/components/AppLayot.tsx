@@ -26,8 +26,8 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Home", to: "/dashboard", icon: LayoutDashboard },
   { label: "All Tickets", to: "/tickets", icon: Ticket },
-  { label: "Analytics", to: "/analytics", icon: ChartColumnBig },
   { label: "My Tickets", to: "/my-tickets", icon: ListChecks },
+  { label: "Analytics", to: "/analytics", icon: ChartColumnBig },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
