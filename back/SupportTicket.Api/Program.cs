@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SupportTicket.Api.Data;
+using SupportTicket.Api.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<SeedOptions>(
+    builder.Configuration.GetSection("Seed"));
+
+builder.Services.AddHttpClient<DatabaseSeeder>();
+
 var app = builder.Build();
 
 await DatabaseSchemaBootstrapper.WaitForDatabaseAndApplyAsync(connectionString, app.Logger);
@@ -31,5 +37,11 @@ await DatabaseSchemaBootstrapper.WaitForDatabaseAndApplyAsync(connectionString, 
 app.UseCors("Front");
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
+}
 
 app.Run();

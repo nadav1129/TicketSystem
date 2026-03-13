@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
@@ -15,58 +15,256 @@ import {
   TableRow,
 } from "../../ui/table";
 
-const stats = [
-  { label: "Open Tickets", value: "128", hint: "+12 today" },
-  { label: "Avg Response", value: "4m", hint: "-18% this week" },
-  { label: "Resolved Today", value: "86", hint: "92% SLA" },
-  { label: "Satisfaction", value: "4.8/5", hint: "241 reviews" },
-];
+type ApiTicket = {
+  id: number;
+  ticketNumber?: number;
+  subject?: string;
+  requesterName: string;
+  productName: string;
+  channel: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+};
 
-const tickets = [
-  {
-    id: "#4821",
-    requester: "Dana Levy",
-    subject: "Wheelchair-accessible entrance issue",
-    priority: "High",
-    status: "In Progress",
-    channel: "Voice",
-  },
-  {
-    id: "#4817",
-    requester: "Maya Cohen",
-    subject: "Billing address update request",
-    priority: "Medium",
-    status: "Waiting",
-    channel: "Web",
-  },
-  {
-    id: "#4811",
-    requester: "Amit Ben David",
-    subject: "Login problem after password reset",
-    priority: "High",
-    status: "Open",
-    channel: "Mobile",
-  },
-  {
-    id: "#4802",
-    requester: "Noa Mizrahi",
-    subject: "Request for callback in Hebrew",
-    priority: "Low",
-    status: "Resolved",
-    channel: "Phone",
-  },
-];
+type AnalyticsSummary = {
+  days: number;
+  totalTickets: number;
+  openTickets: number;
+  resolvedTickets: number;
+  urgentTickets: number;
+  activeAgents: number;
+  avgFirstResponseHours: number;
+  avgResolutionHours: number;
+  timeline: {
+    label: string;
+    ticketsCreated: number;
+    ticketsResolved: number;
+  }[];
+  byStatus: {
+    key: string;
+    count: number;
+  }[];
+};
+
+type DashboardTicket = {
+  rawId: number;
+  id: string;
+  requester: string;
+  subject: string;
+  channel: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+};
 
 type VoiceState = "connecting" | "listening" | "speaking";
 
+const ANALYTICS_WINDOW_DAYS = 30;
+
+async function buildHttpError(response: Response, fallback: string): Promise<string> {
+  let detail = "";
+
+  try {
+    const text = await response.text();
+    if (text) {
+      try {
+        const parsed = JSON.parse(text) as
+          | string
+          | { message?: string; detail?: string; title?: string };
+
+        if (typeof parsed === "string") {
+          detail = parsed;
+        } else {
+          detail =
+            parsed.message ??
+            parsed.detail ??
+            parsed.title ??
+            text;
+        }
+      } catch {
+        detail = text;
+      }
+    }
+  } catch {
+    // Ignore parse/read failures; fallback message is enough.
+  }
+
+  return detail ? `${fallback} (${detail})` : fallback;
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizePriority(value: string): string {
+  return toTitleCase(value);
+}
+
+function normalizeStatus(value: string): string {
+  const normalized = toTitleCase(value);
+  if (normalized === "Inprogress") return "In Progress";
+  return normalized;
+}
+
+function normalizeChannel(value: string): string {
+  return toTitleCase(value);
+}
+
+function isResolvedStatus(status: string): boolean {
+  return status === "Resolved" || status === "Closed";
+}
+
+function formatHours(value: number): string {
+  return `${value.toFixed(2)}h`;
+}
+
+function getPeriodLabel(days: number): string {
+  if (days === 7) return "last 7 days";
+  if (days === 30) return "last 30 days";
+  return "last 90 days";
+}
+
+function getPriorityBadgeVariant(
+  value: string,
+): "danger" | "warning" | "secondary" {
+  if (value === "Urgent" || value === "Critical") return "danger";
+  if (value === "High" || value === "Medium") return "warning";
+  return "secondary";
+}
+
+function getStatusBadgeVariant(
+  value: string,
+): "success" | "info" | "danger" | "secondary" {
+  if (value === "Resolved" || value === "Closed") return "success";
+  if (value === "In Progress" || value === "Waiting Customer") return "info";
+  if (value === "Escalated") return "danger";
+  return "secondary";
+}
+
+function toDashboardTicket(ticket: ApiTicket): DashboardTicket {
+  return {
+    rawId: ticket.id,
+    id: `#${ticket.ticketNumber ?? ticket.id}`,
+    requester: ticket.requesterName?.trim() || "Unknown requester",
+    subject: ticket.subject?.trim() || ticket.productName?.trim() || "No subject",
+    channel: normalizeChannel(ticket.channel),
+    priority: normalizePriority(ticket.priority),
+    status: normalizeStatus(ticket.status),
+    createdAt: ticket.createdAt,
+  };
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [tickets, setTickets] = useState<DashboardTicket[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isTicketPanelOpen, setIsTicketPanelOpen] = useState(false);
   const [isVoiceVisualizerOpen, setIsVoiceVisualizerOpen] = useState(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("connecting");
 
-  const openTicket = (ticketId: string) => {
-    navigate(`/agent/tickets/${ticketId.replace("#", "")}`, {
+  useEffect(() => {
+    let isDisposed = false;
+
+    const loadTickets = async (): Promise<{
+      data: DashboardTicket[];
+      error: string;
+    }> => {
+      try {
+        const response = await fetch("http://localhost:8080/api/tickets");
+
+        if (!response.ok) {
+          throw new Error(
+            await buildHttpError(
+              response,
+              `Failed to load tickets. Status: ${response.status}`,
+            ),
+          );
+        }
+
+        const data: ApiTicket[] = await response.json();
+        return {
+          data: data.map(toDashboardTicket),
+          error: "",
+        };
+      } catch (err) {
+        return {
+          data: [],
+          error:
+            err instanceof Error ? err.message : "Failed to load tickets.",
+        };
+      }
+    };
+
+    const loadAnalytics = async (): Promise<{
+      data: AnalyticsSummary | null;
+      error: string;
+    }> => {
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/analytics/tickets?days=${ANALYTICS_WINDOW_DAYS}`,
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            await buildHttpError(
+              response,
+              `Failed to load analytics. Status: ${response.status}`,
+            ),
+          );
+        }
+
+        const data: AnalyticsSummary = await response.json();
+        return { data, error: "" };
+      } catch (err) {
+        return {
+          data: null,
+          error:
+            err instanceof Error ? err.message : "Failed to load analytics.",
+        };
+      }
+    };
+
+    const loadDashboard = async () => {
+      setIsLoading(true);
+      setError("");
+
+      const [ticketsResult, analyticsResult] = await Promise.all([
+        loadTickets(),
+        loadAnalytics(),
+      ]);
+
+      if (isDisposed) {
+        return;
+      }
+
+      setTickets(ticketsResult.data);
+      setAnalytics(analyticsResult.data);
+
+      const nextError = [ticketsResult.error, analyticsResult.error]
+        .filter(Boolean)
+        .join(" ");
+
+      setError(nextError);
+      setIsLoading(false);
+    };
+
+    void loadDashboard();
+
+    return () => {
+      isDisposed = true;
+    };
+  }, []);
+
+  const openTicket = (ticketId: number) => {
+    navigate(`http://localhost:8080/agent/tickets/${ticketId}`, {
       state: {
         allowReply: false,
         source: "dashboard",
@@ -77,13 +275,76 @@ export default function DashboardPage() {
     });
   };
 
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredTickets = tickets.filter((ticket) => {
+    if (normalizedSearch.length === 0) {
+      return true;
+    }
+
+    return [
+      ticket.id,
+      ticket.requester,
+      ticket.subject,
+      ticket.channel,
+      ticket.priority,
+      ticket.status,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSearch);
+  });
+
+  const visibleTickets = filteredTickets.slice(0, 6);
+  const openTickets = tickets.filter((ticket) => !isResolvedStatus(ticket.status)).length;
+  const latestTimelinePoint =
+    analytics && analytics.timeline.length > 0
+      ? analytics.timeline[analytics.timeline.length - 1]
+      : null;
+  const analyticsDays = analytics?.days ?? ANALYTICS_WINDOW_DAYS;
+  const periodLabel = getPeriodLabel(analyticsDays);
+  const statusBreakdown = analytics?.byStatus.slice(0, 4) ?? [];
+  const stats = [
+    {
+      label: "Open Tickets",
+      value: isLoading ? "..." : openTickets.toLocaleString(),
+      hint: isLoading
+        ? "Loading live queue"
+        : `${tickets.length.toLocaleString()} total tickets loaded`,
+    },
+    {
+      label: "Resolved Today",
+      value: isLoading
+        ? "..."
+        : (latestTimelinePoint?.ticketsResolved ?? 0).toLocaleString(),
+      hint: isLoading
+        ? "Loading throughput"
+        : `${(latestTimelinePoint?.ticketsCreated ?? 0).toLocaleString()} created today`,
+    },
+    {
+      label: "Avg Response",
+      value: isLoading || !analytics ? "..." : formatHours(analytics.avgFirstResponseHours),
+      hint: isLoading || !analytics
+        ? "Loading response time"
+        : `Avg resolution ${formatHours(analytics.avgResolutionHours)}`,
+    },
+    {
+      label: "Active Agents",
+      value: isLoading || !analytics ? "..." : analytics.activeAgents.toLocaleString(),
+      hint: isLoading || !analytics
+        ? "Loading staffing"
+        : `${analytics.urgentTickets.toLocaleString()} urgent in ${periodLabel}`,
+    },
+  ];
+
   return (
     <AppLayot
       title="Support Dashboard"
-      subtitle="Real-time operations view for support teams."
+      subtitle="Live operations view backed by ticket and analytics APIs."
       action={
         <div className="flex items-center gap-3">
           <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Search tickets, users, tags..."
             className="w-72 bg-slate-50"
           />
@@ -97,6 +358,12 @@ export default function DashboardPage() {
       }
     >
       <section className="space-y-6 p-6">
+        {error && (
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            {error}
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="rounded-3xl border-slate-200">
@@ -114,14 +381,16 @@ export default function DashboardPage() {
         <div className="grid gap-6 xl:grid-cols-3">
           <Card className="rounded-3xl border-slate-200 xl:col-span-2">
             <CardHeader className="p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <CardTitle className="text-lg">Incoming Requests</CardTitle>
                   <CardDescription className="mt-1">
-                    Today's active queue overview
+                    Recent live queue items filtered from the tickets API.
                   </CardDescription>
                 </div>
-                <Badge variant="success">Live</Badge>
+                <Badge variant="success">
+                  {isLoading ? "Loading" : `${filteredTickets.length} match${filteredTickets.length === 1 ? "" : "es"}`}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -138,14 +407,36 @@ export default function DashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tickets.map((ticket) => (
+                    {isLoading && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="py-10 text-center text-zinc-500"
+                        >
+                          Loading dashboard tickets...
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {!isLoading && visibleTickets.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="py-10 text-center text-zinc-500"
+                        >
+                          No tickets found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {visibleTickets.map((ticket) => (
                       <TableRow
-                        key={ticket.id}
-                        onClick={() => openTicket(ticket.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            openTicket(ticket.id);
+                        key={ticket.rawId}
+                        onClick={() => openTicket(ticket.rawId)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openTicket(ticket.rawId);
                           }
                         }}
                         tabIndex={0}
@@ -156,28 +447,12 @@ export default function DashboardPage() {
                         <TableCell className="text-zinc-400">{ticket.subject}</TableCell>
                         <TableCell>{ticket.channel}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              ticket.priority === "High"
-                                ? "danger"
-                                : ticket.priority === "Medium"
-                                  ? "warning"
-                                  : "secondary"
-                            }
-                          >
+                          <Badge variant={getPriorityBadgeVariant(ticket.priority)}>
                             {ticket.priority}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              ticket.status === "Resolved"
-                                ? "success"
-                                : ticket.status === "In Progress"
-                                  ? "info"
-                                  : "secondary"
-                            }
-                          >
+                          <Badge variant={getStatusBadgeVariant(ticket.status)}>
                             {ticket.status}
                           </Badge>
                         </TableCell>
@@ -218,39 +493,42 @@ export default function DashboardPage() {
 
             <Card className="rounded-3xl border-slate-200">
               <CardHeader className="p-5">
-                <CardTitle className="text-lg">Team Performance</CardTitle>
-                <CardDescription className="mt-1">Quick KPI snapshot</CardDescription>
+                <CardTitle className="text-lg">Status Breakdown</CardTitle>
+                <CardDescription className="mt-1">
+                  Analytics snapshot for the {periodLabel}.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span>First response SLA</span>
-                    <span className="font-medium">89%</span>
+                {statusBreakdown.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                    {isLoading ? "Loading analytics..." : "No analytics available."}
                   </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className="h-2 w-[89%] rounded-full bg-slate-900" />
-                  </div>
-                </div>
+                ) : (
+                  statusBreakdown.map((item) => {
+                    const percent = analytics?.totalTickets
+                      ? Math.round((item.count / analytics.totalTickets) * 100)
+                      : 0;
 
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span>Resolution SLA</span>
-                    <span className="font-medium">73%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className="h-2 w-[73%] rounded-full bg-slate-900" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span>Accessibility requests handled</span>
-                    <span className="font-medium">96%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className="h-2 w-[96%] rounded-full bg-slate-900" />
-                  </div>
-                </div>
+                    return (
+                      <div key={item.key}>
+                        <div className="mb-2 flex items-center justify-between text-sm">
+                          <span>{item.key}</span>
+                          <span className="font-medium">
+                            {item.count} ({percent}%)
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100">
+                          <div
+                            className="h-2 rounded-full bg-slate-900"
+                            style={{
+                              width: `${Math.max(percent, item.count > 0 ? 8 : 0)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </div>

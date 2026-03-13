@@ -554,7 +554,7 @@ export default function AnalyticsPage() {
   };
 
   const handleOpenTicket = (ticketId: number) => {
-    navigate(`/agent/tickets/${ticketId}`, {
+    navigate(`http://localhost:8080/agent/tickets/${ticketId}`, {
       state: {
         allowReply: false,
         source: "tickets",
