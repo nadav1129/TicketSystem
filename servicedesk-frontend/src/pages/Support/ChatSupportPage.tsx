@@ -38,8 +38,6 @@ type ChatAskResponse = {
   error?: string | null;
 };
 
-const CHAT_API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "";
 
 const initialMessages: ChatMessage[] = [];
 
