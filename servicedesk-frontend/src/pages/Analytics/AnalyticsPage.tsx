@@ -18,6 +18,7 @@ import {
 
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { apiUrl } from "../../lib/api";
 import { useTheme, type AppTheme } from "../../theme/theme-provider";
 import AnalyticsDataTable from "./AnalyticsDataTable";
 import type { AnalyticsFilterTab, AnalyticsTicket } from "./analytics.types";
@@ -437,8 +438,8 @@ export default function AnalyticsPage() {
         const days = getSelectedDays(chartRange);
 
         const [ticketsResponse, analyticsResponse] = await Promise.all([
-          fetch("http://localhost:8080/api/tickets"),
-          fetch(`http://localhost:8080/api/analytics/tickets?days=${days}`),
+          fetch(apiUrl("/api/tickets")),
+          fetch(apiUrl(`/api/analytics/tickets?days=${days}`)),
         ]);
 
         if (!ticketsResponse.ok) {

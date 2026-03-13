@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
+import { apiUrl } from "../../lib/api";
 import { Badge } from "../../ui/badge";
 
 type ViewerType = "agent" | "customer";
@@ -157,8 +158,10 @@ export default function TicketDetailsPage() {
       setError("");
 
       const detailsUrl = isViewerMode
-        ? `http://localhost:8080/api/ticket-details/${numericTicketId}`
-        : `http://localhost:8080/api/ticket-details/${numericTicketId}?viewerUserId=${viewerUserId}&viewerType=${viewerType}`;
+        ? apiUrl(`/api/ticket-details/${numericTicketId}`)
+        : apiUrl(
+            `/api/ticket-details/${numericTicketId}?viewerUserId=${viewerUserId}&viewerType=${viewerType}`,
+          );
 
       const response = await fetch(detailsUrl);
 
@@ -217,18 +220,15 @@ export default function TicketDetailsPage() {
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(
-        `http://localhost:8080/api/ticket-details/${ticket.id}/replies`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewerUserId,
-            viewerType,
-            message,
-          }),
-        },
-      );
+      const response = await fetch(apiUrl(`/api/ticket-details/${ticket.id}/replies`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          viewerUserId,
+          viewerType,
+          message,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to send reply. Status: ${response.status}`);
@@ -253,18 +253,15 @@ export default function TicketDetailsPage() {
       setError("");
       setSelectedPriority(priorityCode);
 
-      const response = await fetch(
-        `http://localhost:8080/api/ticket-details/${ticket.id}/priority`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewerUserId,
-            viewerType,
-            priorityCode,
-          }),
-        },
-      );
+      const response = await fetch(apiUrl(`/api/ticket-details/${ticket.id}/priority`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          viewerUserId,
+          viewerType,
+          priorityCode,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(
@@ -290,19 +287,16 @@ export default function TicketDetailsPage() {
       setError("");
       setSelectedStatus(statusCode);
 
-      const response = await fetch(
-        `http://localhost:8080/api/ticket-details/${ticket.id}/status`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewerUserId,
-            viewerType,
-            statusCode,
-            note: "Changed from ticket details page",
-          }),
-        },
-      );
+      const response = await fetch(apiUrl(`/api/ticket-details/${ticket.id}/status`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          viewerUserId,
+          viewerType,
+          statusCode,
+          note: "Changed from ticket details page",
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to update status. Status: ${response.status}`);
@@ -331,19 +325,16 @@ export default function TicketDetailsPage() {
       setPendingClose(true);
       setError("");
 
-      const response = await fetch(
-        `http://localhost:8080/api/ticket-details/${ticket.id}/close`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewerUserId,
-            viewerType,
-            rating: isAgent ? null : rating,
-            ratingComment: isAgent ? "" : ratingComment.trim(),
-          }),
-        },
-      );
+      const response = await fetch(apiUrl(`/api/ticket-details/${ticket.id}/close`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          viewerUserId,
+          viewerType,
+          rating: isAgent ? null : rating,
+          ratingComment: isAgent ? "" : ratingComment.trim(),
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to close ticket. Status: ${response.status}`);

@@ -5,6 +5,7 @@ import Step1Contact from './Step1Contact';
 import Step2ProductSelect from './Step2ProductSelect';
 import Step3IssueDetails from './Step3IssueDetails';
 import Step4ReviewSend from './Step4ReviewSend';
+import { apiUrl } from '../../lib/api';
 import { Button } from '../../ui/button';
 import type {
   Product,
@@ -215,7 +216,7 @@ export default function TicketSubmissionPanel({
 
       console.log('submit payload:', payload);
 
-      const response = await fetch('http://localhost:8080/api/tickets', {
+      const response = await fetch(apiUrl('/api/tickets'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

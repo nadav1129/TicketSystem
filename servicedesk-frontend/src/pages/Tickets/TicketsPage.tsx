@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { apiUrl } from "../../lib/api";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
@@ -105,7 +106,7 @@ export default function TicketsPage() {
         setIsLoading(true);
         setError("");
 
-        const response = await fetch("http://localhost:8080/api/tickets");
+        const response = await fetch(apiUrl("/api/tickets"));
 
         if (!response.ok) {
           throw new Error(`Failed to load tickets. Status: ${response.status}`);

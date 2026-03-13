@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { apiUrl } from "../../lib/api";
 import { useTheme } from "../../theme/theme-provider";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -73,7 +74,7 @@ function getMessageContainerClass(role: MessageRole, isLightTheme: boolean) {
 }
 
 async function askChat(question: string): Promise<ChatAskResponse> {
-  const response = await fetch("http://localhost:8080/api/chat/ask", {
+  const response = await fetch(apiUrl("/api/chat/ask"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

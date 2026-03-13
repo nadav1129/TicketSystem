@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayot from "../../components/AppLayot";
 import TicketSubmitionPannel from "../../features/ticket-submission/TicketSubmissionPanel";
+import { apiUrl } from "../../lib/api";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
@@ -178,7 +179,7 @@ export default function DashboardPage() {
       error: string;
     }> => {
       try {
-        const response = await fetch("http://localhost:8080/api/tickets");
+        const response = await fetch(apiUrl("/api/tickets"));
 
         if (!response.ok) {
           throw new Error(
@@ -209,7 +210,7 @@ export default function DashboardPage() {
     }> => {
       try {
         const response = await fetch(
-          `http://localhost:8080/api/analytics/tickets?days=${ANALYTICS_WINDOW_DAYS}`,
+          apiUrl(`/api/analytics/tickets?days=${ANALYTICS_WINDOW_DAYS}`),
         );
 
         if (!response.ok) {

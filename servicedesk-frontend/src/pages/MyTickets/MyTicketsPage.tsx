@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayot from '../../components/AppLayot';
+import { apiUrl } from '../../lib/api';
 import { Badge } from '../../ui/badge';
 import { Input } from '../../ui/input';
 import { Select } from '../../ui/select';
@@ -85,7 +86,7 @@ export default function MyTicketsPage() {
         });
 
         const response = await fetch(
-          `http://localhost:8080/api/tickets/my-tickets/users?role=${pageMode}`,
+          apiUrl(`/api/tickets/my-tickets/users?role=${pageMode}`),
         );
 
         if (!response.ok) {
@@ -121,7 +122,7 @@ export default function MyTicketsPage() {
         setError('');
 
         const response = await fetch(
-          `http://localhost:8080/api/tickets/my-tickets/${pageMode}/${selectedUserId}`,
+          apiUrl(`/api/tickets/my-tickets/${pageMode}/${selectedUserId}`),
         );
 
         if (!response.ok) {
